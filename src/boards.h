@@ -126,6 +126,181 @@
  * Display: ST7796, SPI (VSPI), 480×320, BL=PWM GPIO27
  * Touch:   GT911 capacitive (some variants) or XPT2046 resistive
  */
+/* ══════════════════════════════════════════════════════════════════
+ * Adafruit ILI9341 2.8" breakout (SPI, 240×320, with XPT2046 touch)
+ * ══════════════════════════════════════════════════════════════════
+ * MCU:     Any ESP32 (pins mapped to typical VSPI defaults)
+ * Display: ILI9341, SPI, 240×320 portrait
+ * Touch:   XPT2046 resistive, same SPI bus, separate CS
+ *
+ * Wiring (typical VSPI):
+ *   CLK  → GPIO18   MOSI → GPIO23   MISO → GPIO19
+ *   CS   → GPIO5    DC   → GPIO21   RST  → GPIO22
+ *   T_CS → GPIO4    T_IRQ → GPIO15
+ *   LED  → 3.3V (always on) or GPIO with PWM
+ *
+ * ⚠️ Adafruit breakout has a 10-pin 0.1" header — verify your wiring
+ *    with the Adafruit pinout diagram, it differs from Chinese clones.
+ */
+#elif defined(WY_BOARD_ILI9341_ADAFRUIT)
+  #define WY_BOARD_NAME       "Adafruit ILI9341 2.8\" SPI (240x320)"
+  #define WY_MCU_ESP32
+  #define WY_MCU_CORES        2
+  #define WY_MCU_FREQ         240
+  #define WY_HAS_PSRAM        0
+  #define WY_HAS_DISPLAY      1
+  #define WY_DISPLAY_ILI9341
+  #define WY_DISPLAY_BUS_SPI
+  #define WY_DISPLAY_W        240
+  #define WY_DISPLAY_H        320
+  #define WY_DISPLAY_ROT      0
+  #define WY_DISPLAY_DC       21
+  #define WY_DISPLAY_CS       5
+  #define WY_DISPLAY_SCK      18
+  #define WY_DISPLAY_MOSI     23
+  #define WY_DISPLAY_MISO     19
+  #define WY_DISPLAY_RST      22
+  #define WY_DISPLAY_BL       -1      /* tie LED to 3.3V or add GPIO */
+  #define WY_DISPLAY_BL_PWM   0
+  #define WY_HAS_TOUCH        1
+  #define WY_TOUCH_XPT2046
+  #define WY_TOUCH_BUS_SPI
+  #define WY_TOUCH_CS         4
+  #define WY_TOUCH_IRQ        15
+  #define WY_TOUCH_SCK        18      /* shared SPI bus */
+  #define WY_TOUCH_MOSI       23
+  #define WY_TOUCH_MISO       19
+  #define WY_TOUCH_X_MIN      200
+  #define WY_TOUCH_X_MAX      3700
+  #define WY_TOUCH_Y_MIN      200
+  #define WY_TOUCH_Y_MAX      3800
+  #define WY_BOOT_BTN         0
+  #define WY_SCREEN_W         WY_DISPLAY_W
+  #define WY_SCREEN_H         WY_DISPLAY_H
+
+/* ══════════════════════════════════════════════════════════════════
+ * Generic ILI9341 2.4" / 2.8" SPI breakout (Chinese clone)
+ * ══════════════════════════════════════════════════════════════════
+ * The most common bare ILI9341 module on AliExpress/eBay.
+ * Red PCB, 14-pin header. 240×320. Often includes XPT2046 touch.
+ *
+ * Typical pin labelling on module: LED, SCK, SDI(MOSI), DC, RST,
+ * CS, GND, VCC, SDO(MISO), T_CLK, T_CS, T_DIN, T_DO, T_IRQ
+ *
+ * Default mapping to ESP32 VSPI:
+ *   SCK  → GPIO14   SDI  → GPIO13   SDO  → GPIO12
+ *   CS   → GPIO15   DC   → GPIO2    RST  → GPIO4
+ *   T_CLK→ GPIO14   T_DIN→ GPIO13   T_DO → GPIO12  (shared bus)
+ *   T_CS → GPIO33   T_IRQ→ GPIO36
+ *   LED  → GPIO21 (or 3.3V directly for always-on)
+ */
+#elif defined(WY_BOARD_ILI9341_GENERIC)
+  #define WY_BOARD_NAME       "Generic ILI9341 SPI 2.4\"/2.8\" (240x320)"
+  #define WY_MCU_ESP32
+  #define WY_MCU_CORES        2
+  #define WY_MCU_FREQ         240
+  #define WY_HAS_PSRAM        0
+  #define WY_HAS_DISPLAY      1
+  #define WY_DISPLAY_ILI9341
+  #define WY_DISPLAY_BUS_SPI
+  #ifndef WY_DISPLAY_W
+    #define WY_DISPLAY_W      240
+  #endif
+  #ifndef WY_DISPLAY_H
+    #define WY_DISPLAY_H      320
+  #endif
+  #ifndef WY_DISPLAY_ROT
+    #define WY_DISPLAY_ROT    0
+  #endif
+  #ifndef WY_DISPLAY_DC
+    #define WY_DISPLAY_DC     2
+  #endif
+  #ifndef WY_DISPLAY_CS
+    #define WY_DISPLAY_CS     15
+  #endif
+  #ifndef WY_DISPLAY_SCK
+    #define WY_DISPLAY_SCK    14
+  #endif
+  #ifndef WY_DISPLAY_MOSI
+    #define WY_DISPLAY_MOSI   13
+  #endif
+  #ifndef WY_DISPLAY_MISO
+    #define WY_DISPLAY_MISO   12
+  #endif
+  #ifndef WY_DISPLAY_RST
+    #define WY_DISPLAY_RST    4
+  #endif
+  #ifndef WY_DISPLAY_BL
+    #define WY_DISPLAY_BL     21
+  #endif
+  #ifndef WY_DISPLAY_BL_PWM
+    #define WY_DISPLAY_BL_PWM 1
+  #endif
+  #define WY_HAS_TOUCH        1
+  #define WY_TOUCH_XPT2046
+  #define WY_TOUCH_BUS_SPI
+  #ifndef WY_TOUCH_CS
+    #define WY_TOUCH_CS       33
+  #endif
+  #ifndef WY_TOUCH_IRQ
+    #define WY_TOUCH_IRQ      36
+  #endif
+  #define WY_TOUCH_SCK        WY_DISPLAY_SCK    /* shared bus */
+  #define WY_TOUCH_MOSI       WY_DISPLAY_MOSI
+  #define WY_TOUCH_MISO       WY_DISPLAY_MISO
+  #define WY_TOUCH_X_MIN      200
+  #define WY_TOUCH_X_MAX      3700
+  #define WY_TOUCH_Y_MIN      200
+  #define WY_TOUCH_Y_MAX      3800
+  #define WY_BOOT_BTN         0
+  #define WY_SCREEN_W         WY_DISPLAY_W
+  #define WY_SCREEN_H         WY_DISPLAY_H
+
+/* ══════════════════════════════════════════════════════════════════
+ * M5Stack Core / Core2 (ILI9342C — ILI9341 variant, 320×240)
+ * ══════════════════════════════════════════════════════════════════
+ * MCU:     ESP32-D0WDQ6, 4MB flash, 8MB PSRAM (Core2: 16MB flash)
+ * Display: ILI9342C (ILI9341 in landscape native — same driver),
+ *          SPI, 320×240
+ * Touch:   Core: resistive (NS2009). Core2: FT6336U capacitive.
+ * Speaker: DAC on GPIO25
+ * SD:      SPI on GPIO4
+ *
+ * ⚠️ ILI9342C = ILI9341 in landscape-native mode. The controller
+ *    MADCTL is set differently but Arduino_ILI9341 handles it via
+ *    rotation=0 → landscape (swap W/H vs ILI9341 convention).
+ * ⚠️ Use M5Stack's own library for full hardware support (speaker,
+ *    power management, IMU). This board target is for WyDisplay
+ *    display-only use without the M5 framework.
+ */
+#elif defined(WY_BOARD_M5STACK_CORE)
+  #define WY_BOARD_NAME       "M5Stack Core (ILI9342C 320x240)"
+  #define WY_MCU_ESP32
+  #define WY_MCU_CORES        2
+  #define WY_MCU_FREQ         240
+  #define WY_HAS_PSRAM        1
+  #define WY_HAS_DISPLAY      1
+  #define WY_DISPLAY_ILI9341  /* ILI9342C = ILI9341 variant, same driver */
+  #define WY_DISPLAY_BUS_SPI
+  #define WY_DISPLAY_W        320
+  #define WY_DISPLAY_H        240
+  #define WY_DISPLAY_ROT      0       /* ILI9342C native landscape */
+  #define WY_DISPLAY_DC       27
+  #define WY_DISPLAY_CS       14
+  #define WY_DISPLAY_SCK      18
+  #define WY_DISPLAY_MOSI     23
+  #define WY_DISPLAY_MISO     19
+  #define WY_DISPLAY_RST      33
+  #define WY_DISPLAY_BL       32
+  #define WY_DISPLAY_BL_PWM   1
+  #define WY_HAS_TOUCH        0       /* use M5.Touch or dedicated driver */
+  #define WY_HAS_RGB_LED      0
+  #define WY_BOOT_BTN         39      /* btn A */
+  #define WY_SD_CS            4
+  #define WY_SPEAKER_DAC      25
+  #define WY_SCREEN_W         WY_DISPLAY_W
+  #define WY_SCREEN_H         WY_DISPLAY_H
+
 #elif defined(WY_BOARD_ESP32_3248S035)
   #define WY_BOARD_NAME       "ESP32-3248S035 (3.5\" 480x320)"
   #define WY_MCU_ESP32
