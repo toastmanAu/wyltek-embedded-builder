@@ -114,6 +114,98 @@ public:
         gfx->getTextBounds(str, 0, 0, &x1, &y1, &w, &h);
     }
 
+    /* ── Centring — the full suite ──────────────────────────────────
+     *
+     * All functions accept bounds as (x, y, w, h) of the target region.
+     * Pass (0, 0, gfx->width(), gfx->height()) for full screen.
+     *
+     * centreH  — horizontal centre only (y is the baseline)
+     * centreV  — vertical centre only   (x is left edge)
+     * centre   — both axes              (centred in rect)
+     *
+     * All accept font + colour inline — no separate set() call needed.
+     * ─────────────────────────────────────────────────────────────── */
+
+    /* Centre horizontally within bounds, baseline at y */
+    void centreH(const char *str,
+                 int16_t bx, int16_t by, int16_t bw, int16_t bh,
+                 uint16_t col,
+                 const GFXfont *f = nullptr, uint8_t sz = 1) {
+        _setTemp(f, sz, col);
+        int16_t x1, y1; uint16_t tw, th;
+        gfx->getTextBounds(str, 0, 0, &x1, &y1, &tw, &th);
+        int16_t cx = bx + (bw - (int16_t)tw) / 2 - x1;
+        int16_t cy = by + bh;          // caller provides y of baseline zone
+        gfx->setCursor(cx, cy);
+        gfx->print(str);
+        _restore();
+    }
+
+    /* Centre vertically within bounds, left edge at bx */
+    void centreV(const char *str,
+                 int16_t bx, int16_t by, int16_t bw, int16_t bh,
+                 uint16_t col,
+                 const GFXfont *f = nullptr, uint8_t sz = 1) {
+        _setTemp(f, sz, col);
+        int16_t x1, y1; uint16_t tw, th;
+        gfx->getTextBounds(str, 0, 0, &x1, &y1, &tw, &th);
+        int16_t cx = bx - x1;
+        int16_t cy = by + (bh + (int16_t)th) / 2;
+        gfx->setCursor(cx, cy);
+        gfx->print(str);
+        _restore();
+    }
+
+    /* Centre both axes within bounds rect (bx, by, bw, bh) */
+    void centre(const char *str,
+                int16_t bx, int16_t by, int16_t bw, int16_t bh,
+                uint16_t col,
+                const GFXfont *f = nullptr, uint8_t sz = 1) {
+        _setTemp(f, sz, col);
+        int16_t x1, y1; uint16_t tw, th;
+        gfx->getTextBounds(str, 0, 0, &x1, &y1, &tw, &th);
+        int16_t cx = bx + (bw - (int16_t)tw) / 2 - x1;
+        int16_t cy = by + (bh + (int16_t)th) / 2;
+        gfx->setCursor(cx, cy);
+        gfx->print(str);
+        _restore();
+    }
+
+    /* Centre on full screen — shorthand */
+    void centreScreen(const char *str, uint16_t col,
+                      const GFXfont *f = nullptr, uint8_t sz = 1) {
+        centre(str, 0, 0, gfx->width(), gfx->height(), col, f, sz);
+    }
+
+    /* Centre horizontally on full screen width, at a specific y band */
+    void centreRow(const char *str,
+                   int16_t row_y, int16_t row_h,
+                   uint16_t col,
+                   const GFXfont *f = nullptr, uint8_t sz = 1) {
+        centre(str, 0, row_y, gfx->width(), row_h, col, f, sz);
+    }
+
+    /* Printf-style centre — both axes */
+    void centref(int16_t bx, int16_t by, int16_t bw, int16_t bh,
+                 uint16_t col, const GFXfont *f,
+                 const char *fmt, ...) {
+        char buf[128];
+        va_list args;
+        va_start(args, fmt);
+        vsnprintf(buf, sizeof(buf), fmt, args);
+        va_end(args);
+        centre(buf, bx, by, bw, bh, col, f);
+    }
+
+    /* Centre with background fill (clean update) */
+    void centreFilled(const char *str,
+                      int16_t bx, int16_t by, int16_t bw, int16_t bh,
+                      uint16_t col, uint16_t bg,
+                      const GFXfont *f = nullptr, uint8_t sz = 1) {
+        gfx->fillRect(bx, by, bw, bh, bg);
+        centre(str, bx, by, bw, bh, col, f, sz);
+    }
+
     /* ── Drawing — left-aligned (baseline at y) ──────────────────── */
 
     void draw(const char *str, int16_t x, int16_t y) {
@@ -253,11 +345,34 @@ public:
     }
 
 private:
+    const GFXfont *_saved_font  = nullptr;
+    uint8_t        _saved_size  = 1;
+    uint16_t       _saved_col   = 0xFFFF;
+
     void _apply() {
         gfx->setFont(font);
         gfx->setTextSize(font ? 1 : size);
         gfx->setTextColor(colour);
         gfx->setTextWrap(wrap);
+    }
+
+    /* Apply a temporary font/size/colour, saving current state */
+    void _setTemp(const GFXfont *f, uint8_t sz, uint16_t col) {
+        _saved_font = font;
+        _saved_size = size;
+        _saved_col  = colour;
+        gfx->setFont(f);
+        gfx->setTextSize(f ? 1 : sz);
+        gfx->setTextColor(col);
+        gfx->setTextWrap(wrap);
+    }
+
+    /* Restore font/size/colour after _setTemp */
+    void _restore() {
+        font   = _saved_font;
+        size   = _saved_size;
+        colour = _saved_col;
+        _apply();
     }
 };
 
