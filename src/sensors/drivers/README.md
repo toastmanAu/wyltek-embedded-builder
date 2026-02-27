@@ -30,6 +30,9 @@ All drivers implement `WySensorBase` — just `begin()`, `read()`, `driverName()
 | `WyVL53L0X.h` | VL53L0X              | I2C  | Distance (mm), ToF laser | ✓ |
 | `WyMAX6675.h` | MAX6675              | SPI  | Thermocouple temp (0–1023°C) | ✓ |
 
+| `WyGM861S.h`  | Grow GM861S           | UART | Barcode/QR scan output, trigger control |
+| `WyHSQR204.h` | HS-QR204 / HSP04      | UART | Thermal receipt printer (ESC/POS) |
+
 ## Drivers planned
 
 | Sensor | Bus | Measures | Notes |
