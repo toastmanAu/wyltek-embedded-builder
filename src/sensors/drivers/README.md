@@ -19,22 +19,22 @@ All drivers implement `WySensorBase` — just `begin()`, `read()`, `driverName()
 
 | Driver | Sensor | Bus | Measures | Tested |
 |--------|--------|-----|----------|--------|
-| `WyBME280.h` | BME280 / BMP280 | I2C | Temp, Humidity, Pressure, Altitude | ✓ |
-| `WySHT31.h`  | SHT31 / SHT35   | I2C | Temp, Humidity | ✓ |
-| `WyDHT22.h`  | DHT22 / DHT11   | GPIO | Temp, Humidity | ✓ |
-| `WyMAX6675.h`| MAX6675         | SPI | Thermocouple temp (0–1023°C) | ✓ |
+| `WyBME280.h`  | BME280 / BMP280      | I2C  | Temp, Humidity, Pressure, Altitude | ✓ |
+| `WySHT31.h`   | SHT31 / SHT35        | I2C  | Temp, Humidity | ✓ |
+| `WyAHT20.h`   | AHT20 / AHT21 / AHT10 | I2C | Temp, Humidity | ✓ |
+| `WyDHT22.h`   | DHT22 / DHT11        | GPIO | Temp, Humidity | ✓ |
+| `WyDS18B20.h` | DS18B20              | 1-Wire GPIO | Temp, multi-sensor bus | ✓ |
+| `WyBH1750.h`  | BH1750               | I2C  | Light (lux, 0.5–1 lux res) | ✓ |
+| `WyHCSR04.h`  | HC-SR04 / JSN-SR04T  | GPIO | Distance (mm), temp compensated | ✓ |
+| `WyINA219.h`  | INA219               | I2C  | Voltage, Current, Power (W) | ✓ |
+| `WyVL53L0X.h` | VL53L0X              | I2C  | Distance (mm), ToF laser | ✓ |
+| `WyMAX6675.h` | MAX6675              | SPI  | Thermocouple temp (0–1023°C) | ✓ |
 
-## Drivers in progress / planned
+## Drivers planned
 
 | Sensor | Bus | Measures | Notes |
 |--------|-----|----------|-------|
-| DS18B20 | 1-Wire GPIO | Temp | Parasitic power, multiple on same bus |
-| AHT20 / AHT21 | I2C | Temp, Humidity | Common cheap modules |
-| BH1750 | I2C | Light (lux) | 16-bit, 1 lux resolution |
 | VEML7700 | I2C | Light (lux) | High dynamic range |
-| VL53L0X | I2C | Distance (mm) | ToF laser ranging |
-| HC-SR04 | GPIO (2-pin) | Distance (cm) | Ultrasonic, TRIG+ECHO |
-| INA219 | I2C | Voltage, Current, Power | Shunt resistor based |
 | INA3221 | I2C | 3-channel voltage/current | |
 | MPU6050 | I2C | Accel, Gyro, Temp | 6-DoF IMU |
 | QMC5883L | I2C | Magnetometer | Compass bearing |
