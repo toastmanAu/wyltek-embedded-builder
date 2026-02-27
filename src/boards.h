@@ -142,6 +142,123 @@
  * ⚠️ Adafruit breakout has a 10-pin 0.1" header — verify your wiring
  *    with the Adafruit pinout diagram, it differs from Chinese clones.
  */
+/* ══════════════════════════════════════════════════════════════════
+ * Double EYE — Dual GC9A01 0.71" Round Display Module (128×128 × 2)
+ * ══════════════════════════════════════════════════════════════════
+ * Two GC9A01 round LCDs (128×128, 0.71") on one PCB.
+ * Shared SPI bus, independent CS pins — drive alternately.
+ * Designed for robot eyes / animatronic face projects.
+ * Compatible with any ESP32 / ESP32-S3.
+ *
+ * Typical module pinout (may vary slightly by seller):
+ *   VCC  → 3.3V
+ *   GND  → GND
+ *   SCL  → SPI CLK
+ *   SDA  → SPI MOSI
+ *   RES  → shared reset (both displays)
+ *   DC   → shared data/command
+ *   CS1  → left eye chip select
+ *   CS2  → right eye chip select
+ *   BLK  → shared backlight (active HIGH)
+ *
+ * ⚠️ Both displays share DC, RST, BL — only CS is separate.
+ *    Drive one eye at a time: assert CS1 LOW, send frame, deassert,
+ *    then assert CS2 LOW, send frame, deassert. See WyEyes.h.
+ * ⚠️ 128×128 (not 240×240) — these are 0.71", smaller than the
+ *    common 1.28" GC9A01 round displays.
+ */
+#elif defined(WY_BOARD_DOUBLE_EYE)
+  #define WY_BOARD_NAME       "Double EYE Dual GC9A01 0.71\" (128x128 x2)"
+  #define WY_MCU_ESP32
+  #define WY_MCU_CORES        2
+  #define WY_MCU_FREQ         240
+  #define WY_HAS_PSRAM        0
+  #define WY_HAS_DISPLAY      1       /* left eye — primary */
+  #define WY_DISPLAY_GC9A01
+  #define WY_DISPLAY_BUS_SPI
+  #define WY_DISPLAY_W        128
+  #define WY_DISPLAY_H        128
+  #define WY_DISPLAY_ROT      0
+  #ifndef WY_DISPLAY_DC
+    #define WY_DISPLAY_DC     2       /* shared between both eyes */
+  #endif
+  #ifndef WY_DISPLAY_CS
+    #define WY_DISPLAY_CS     5       /* CS1 — left eye */
+  #endif
+  #ifndef WY_EYE_CS2
+    #define WY_EYE_CS2        15      /* CS2 — right eye */
+  #endif
+  #ifndef WY_DISPLAY_SCK
+    #define WY_DISPLAY_SCK    18
+  #endif
+  #ifndef WY_DISPLAY_MOSI
+    #define WY_DISPLAY_MOSI   23
+  #endif
+  #ifndef WY_DISPLAY_RST
+    #define WY_DISPLAY_RST    4       /* shared reset */
+  #endif
+  #ifndef WY_DISPLAY_BL
+    #define WY_DISPLAY_BL     21      /* shared backlight */
+  #endif
+  #define WY_DISPLAY_BL_PWM   1
+  #define WY_HAS_DUAL_DISPLAY 1       /* signals WyEyes.h to init both */
+  #define WY_HAS_TOUCH        0
+  #define WY_HAS_RGB_LED      0
+  #define WY_BOOT_BTN         0
+  #define WY_SCREEN_W         WY_DISPLAY_W
+  #define WY_SCREEN_H         WY_DISPLAY_H
+
+/* ══════════════════════════════════════════════════════════════════
+ * Generic GC9A01 round display (1.28" 240×240)
+ * ══════════════════════════════════════════════════════════════════
+ * The common 1.28" round LCD (240×240) — larger than the Double EYE.
+ * No touch. All pins overridable.
+ */
+#elif defined(WY_BOARD_GC9A01_GENERIC)
+  #define WY_BOARD_NAME       "Generic GC9A01 Round 1.28\" (240x240)"
+  #define WY_MCU_ESP32
+  #define WY_MCU_CORES        2
+  #define WY_MCU_FREQ         240
+  #define WY_HAS_PSRAM        0
+  #define WY_HAS_DISPLAY      1
+  #define WY_DISPLAY_GC9A01
+  #define WY_DISPLAY_BUS_SPI
+  #ifndef WY_DISPLAY_W
+    #define WY_DISPLAY_W      240
+  #endif
+  #ifndef WY_DISPLAY_H
+    #define WY_DISPLAY_H      240
+  #endif
+  #ifndef WY_DISPLAY_ROT
+    #define WY_DISPLAY_ROT    0
+  #endif
+  #ifndef WY_DISPLAY_DC
+    #define WY_DISPLAY_DC     2
+  #endif
+  #ifndef WY_DISPLAY_CS
+    #define WY_DISPLAY_CS     15
+  #endif
+  #ifndef WY_DISPLAY_SCK
+    #define WY_DISPLAY_SCK    14
+  #endif
+  #ifndef WY_DISPLAY_MOSI
+    #define WY_DISPLAY_MOSI   13
+  #endif
+  #ifndef WY_DISPLAY_RST
+    #define WY_DISPLAY_RST    4
+  #endif
+  #ifndef WY_DISPLAY_BL
+    #define WY_DISPLAY_BL     21
+  #endif
+  #ifndef WY_DISPLAY_BL_PWM
+    #define WY_DISPLAY_BL_PWM 1
+  #endif
+  #define WY_HAS_TOUCH        0
+  #define WY_HAS_RGB_LED      0
+  #define WY_BOOT_BTN         0
+  #define WY_SCREEN_W         WY_DISPLAY_W
+  #define WY_SCREEN_H         WY_DISPLAY_H
+
 #elif defined(WY_BOARD_ILI9341_ADAFRUIT)
   #define WY_BOARD_NAME       "Adafruit ILI9341 2.8\" SPI (240x320)"
   #define WY_MCU_ESP32
