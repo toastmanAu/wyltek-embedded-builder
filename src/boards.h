@@ -389,6 +389,193 @@
   #define WY_SCREEN_H         WY_DISPLAY_H
 
 /* ══════════════════════════════════════════════════════════════════
+ * TTGO T-Display (original ESP32, 1.14" ST7789 135×240)
+ * ══════════════════════════════════════════════════════════════════
+ * MCU:     ESP32-D0WDQ6, dual-core 240MHz, 4MB flash, no PSRAM
+ * Display: ST7789, SPI, 135×240, portrait native
+ * Buttons: GPIO 0 (BOOT/left), GPIO 35 (right — INPUT only, no pullup)
+ * Battery: BAT_ADC on GPIO 34 (voltage divider ÷2 — read × 2 × 3.3/4096)
+ * USB:     CP2104 USB-to-serial
+ *
+ * ⚠️ GPIO 35 is input-only — no internal pullup. Add external 10kΩ to 3.3V.
+ * ⚠️ Display is 135×240 (portrait). Rotation 1 gives 240×135 landscape.
+ * ⚠️ No PSRAM — keep heap allocations small.
+ */
+#elif defined(WY_BOARD_TTGO_TDISPLAY)
+  #define WY_BOARD_NAME       "TTGO T-Display (1.14\" 135x240)"
+  #define WY_MCU_ESP32
+  #define WY_MCU_CORES        2
+  #define WY_MCU_FREQ         240
+  #define WY_HAS_PSRAM        0
+  #define WY_HAS_DISPLAY      1
+  #define WY_DISPLAY_ST7789
+  #define WY_DISPLAY_BUS_SPI
+  #define WY_DISPLAY_W        135
+  #define WY_DISPLAY_H        240
+  #define WY_DISPLAY_ROT      0       /* portrait — use ROT 1 for landscape (240×135) */
+  #define WY_DISPLAY_DC       16
+  #define WY_DISPLAY_CS       5
+  #define WY_DISPLAY_SCK      18
+  #define WY_DISPLAY_MOSI     19
+  #define WY_DISPLAY_MISO     -1
+  #define WY_DISPLAY_RST      23
+  #define WY_DISPLAY_BL       4
+  #define WY_DISPLAY_BL_PWM   1
+  #define WY_HAS_TOUCH        0
+  #define WY_HAS_RGB_LED      0
+  #define WY_BOOT_BTN         0
+  #define WY_BTN_RIGHT        35      /* input-only GPIO, no internal pullup */
+  #define WY_BAT_ADC          34      /* battery voltage ÷2 divider */
+  #define WY_SCREEN_W         WY_DISPLAY_W
+  #define WY_SCREEN_H         WY_DISPLAY_H
+
+/* ══════════════════════════════════════════════════════════════════
+ * Waveshare ESP32-S3 1.47" (ST7789, 172×320)
+ * ══════════════════════════════════════════════════════════════════
+ * MCU:     ESP32-S3FH4R2, dual-core 240MHz, 4MB flash, 2MB PSRAM
+ * Display: ST7789, SPI, 172×320, rounded corners, portrait native
+ * LED:     RGB LED (WS2812 on GPIO 38)
+ * USB:     USB-C native (GPIO 19/20), no UART chip
+ *
+ * ⚠️ Rounded corners — UI elements near corners may be clipped by hardware.
+ * ⚠️ WS2812 RGB LED — use NeoPixel or FastLED, not analogWrite.
+ */
+#elif defined(WY_BOARD_WAVESHARE_147_S3)
+  #define WY_BOARD_NAME       "Waveshare ESP32-S3 1.47\" (172x320)"
+  #define WY_MCU_ESP32S3
+  #define WY_MCU_CORES        2
+  #define WY_MCU_FREQ         240
+  #define WY_HAS_PSRAM        1
+  #define WY_HAS_DISPLAY      1
+  #define WY_DISPLAY_ST7789
+  #define WY_DISPLAY_BUS_SPI
+  #define WY_DISPLAY_W        172
+  #define WY_DISPLAY_H        320
+  #define WY_DISPLAY_ROT      0
+  #define WY_DISPLAY_DC       8
+  #define WY_DISPLAY_CS       9
+  #define WY_DISPLAY_SCK      10
+  #define WY_DISPLAY_MOSI     11
+  #define WY_DISPLAY_MISO     -1
+  #define WY_DISPLAY_RST      12
+  #define WY_DISPLAY_BL       -1      /* always on via PWR_EN */
+  #define WY_DISPLAY_BL_PWM   0
+  #define WY_HAS_TOUCH        0
+  #define WY_HAS_RGB_LED      0       /* WS2812 on GPIO 38 — use NeoPixel */
+  #define WY_WS2812_PIN       38
+  #define WY_BOOT_BTN         0
+  #define WY_SCREEN_W         WY_DISPLAY_W
+  #define WY_SCREEN_H         WY_DISPLAY_H
+
+/* ══════════════════════════════════════════════════════════════════
+ * Waveshare ESP32-S3 2.0" (ST7789, 240×320)
+ * ══════════════════════════════════════════════════════════════════
+ * MCU:     ESP32-S3FH4R2, dual-core 240MHz, 4MB flash, 2MB PSRAM
+ * Display: ST7789, SPI, 240×320, standard aspect portrait
+ * LED:     WS2812 RGB on GPIO 38
+ * USB:     USB-C native
+ */
+#elif defined(WY_BOARD_WAVESHARE_200_S3)
+  #define WY_BOARD_NAME       "Waveshare ESP32-S3 2.0\" (240x320)"
+  #define WY_MCU_ESP32S3
+  #define WY_MCU_CORES        2
+  #define WY_MCU_FREQ         240
+  #define WY_HAS_PSRAM        1
+  #define WY_HAS_DISPLAY      1
+  #define WY_DISPLAY_ST7789
+  #define WY_DISPLAY_BUS_SPI
+  #define WY_DISPLAY_W        240
+  #define WY_DISPLAY_H        320
+  #define WY_DISPLAY_ROT      0
+  #define WY_DISPLAY_DC       8
+  #define WY_DISPLAY_CS       9
+  #define WY_DISPLAY_SCK      10
+  #define WY_DISPLAY_MOSI     11
+  #define WY_DISPLAY_MISO     -1
+  #define WY_DISPLAY_RST      12
+  #define WY_DISPLAY_BL       -1
+  #define WY_DISPLAY_BL_PWM   0
+  #define WY_HAS_TOUCH        0
+  #define WY_WS2812_PIN       38
+  #define WY_BOOT_BTN         0
+  #define WY_SCREEN_W         WY_DISPLAY_W
+  #define WY_SCREEN_H         WY_DISPLAY_H
+
+/* ══════════════════════════════════════════════════════════════════
+ * Generic ST7789 SPI breakout (user-defined pins)
+ * ══════════════════════════════════════════════════════════════════
+ * For bare ST7789 modules wired to any ESP32/ESP32-S3.
+ * Override any WY_DISPLAY_* define in your build_flags.
+ *
+ * platformio.ini example:
+ *   build_flags =
+ *     -DWY_BOARD_ST7789_GENERIC
+ *     -DWY_DISPLAY_W=240
+ *     -DWY_DISPLAY_H=240
+ *     -DWY_DISPLAY_DC=2
+ *     -DWY_DISPLAY_CS=15
+ *     -DWY_DISPLAY_SCK=14
+ *     -DWY_DISPLAY_MOSI=13
+ *     -DWY_DISPLAY_RST=4
+ *     -DWY_DISPLAY_BL=21
+ *
+ * Common ST7789 resolutions:
+ *   240×240  — 1.3" / 1.54" square modules
+ *   240×320  — 2.0" / 2.4" portrait
+ *   172×320  — 1.47" (Waveshare, rounded corners)
+ *   135×240  — 1.14" (TTGO style)
+ *   280×240  — 1.69" (some Adafruit modules)
+ */
+#elif defined(WY_BOARD_ST7789_GENERIC)
+  #define WY_BOARD_NAME       "Generic ST7789 SPI"
+  #define WY_MCU_ESP32
+  #define WY_MCU_CORES        2
+  #define WY_MCU_FREQ         240
+  #define WY_HAS_PSRAM        0
+  #define WY_HAS_DISPLAY      1
+  #define WY_DISPLAY_ST7789
+  #define WY_DISPLAY_BUS_SPI
+  /* Defaults — override all in build_flags */
+  #ifndef WY_DISPLAY_W
+    #define WY_DISPLAY_W      240
+  #endif
+  #ifndef WY_DISPLAY_H
+    #define WY_DISPLAY_H      240
+  #endif
+  #ifndef WY_DISPLAY_ROT
+    #define WY_DISPLAY_ROT    0
+  #endif
+  #ifndef WY_DISPLAY_DC
+    #define WY_DISPLAY_DC     2
+  #endif
+  #ifndef WY_DISPLAY_CS
+    #define WY_DISPLAY_CS     15
+  #endif
+  #ifndef WY_DISPLAY_SCK
+    #define WY_DISPLAY_SCK    14
+  #endif
+  #ifndef WY_DISPLAY_MOSI
+    #define WY_DISPLAY_MOSI   13
+  #endif
+  #ifndef WY_DISPLAY_MISO
+    #define WY_DISPLAY_MISO   -1
+  #endif
+  #ifndef WY_DISPLAY_RST
+    #define WY_DISPLAY_RST    -1
+  #endif
+  #ifndef WY_DISPLAY_BL
+    #define WY_DISPLAY_BL     21
+  #endif
+  #ifndef WY_DISPLAY_BL_PWM
+    #define WY_DISPLAY_BL_PWM 1
+  #endif
+  #define WY_HAS_TOUCH        0
+  #define WY_HAS_RGB_LED      0
+  #define WY_BOOT_BTN         0
+  #define WY_SCREEN_W         WY_DISPLAY_W
+  #define WY_SCREEN_H         WY_DISPLAY_H
+
+/* ══════════════════════════════════════════════════════════════════
  * ESP32-CAM (AI-Thinker module)
  * ══════════════════════════════════════════════════════════════════
  * MCU:     ESP32-S, single-core 240MHz, 4MB flash, 4MB PSRAM (QSPI)
