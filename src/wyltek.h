@@ -16,3 +16,4 @@
 #include "touch/WyTouch.h"
 #include "settings/WySettings.h"
 #include "net/WyNet.h"
+#include "sensors/WySensors.h"
