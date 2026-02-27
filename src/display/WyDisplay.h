@@ -1,17 +1,25 @@
 /*
- * WyDisplay.h — Board-specific display abstraction for wyltek-embedded-builder
- * =============================================================================
- * Select board via build flag:
- *   -DWY_BOARD_GUITION4848S040  — Guition ESP32-S3-4848S040, ST7701S 480×480 RGB
- *   -DWY_BOARD_CYD              — ESP32-2432S028R CYD, ILI9341 320×240 SPI
+ * WyDisplay.h — Display abstraction for wyltek-embedded-builder
+ * ==============================================================
+ * Reads board config from boards.h. Supports:
+ *   - SPI displays: ILI9341, ST7796, ST7789, GC9A01
+ *   - RGB parallel: ST7701S (Guition 4848), ST7262 (Sunton 8048)
+ *   - 8-bit parallel: ST7796 (WT32-SC01 Plus)
  *
  * Usage:
+ *   #include <WyDisplay.h>
  *   WyDisplay display;
  *   display.begin();
- *   display.gfx->fillScreen(BLACK);   // access underlying GFX object directly
+ *   display.gfx->fillScreen(BLACK);
+ *
+ * Modules only compiled if WY_HAS_DISPLAY=1 (set by boards.h).
  */
 
 #pragma once
+#include "boards.h"
+
+#if WY_HAS_DISPLAY
+
 #include <Arduino.h>
 #include <Arduino_GFX_Library.h>
 
@@ -26,101 +34,154 @@
 #define WY_MAGENTA 0xF81F
 #define WY_ORANGE  0xFD20
 #define WY_GRAY    0x8410
+#define WY_DARKGRAY 0x4208
+
+/* ── Backlight helpers ──────────────────────────────────────────── */
+#if WY_DISPLAY_BL_PWM
+  #define WY_BL_CHANNEL 0
+  static inline void _wy_bl_init() {
+      ledcSetup(WY_BL_CHANNEL, 5000, 8);
+      ledcAttachPin(WY_DISPLAY_BL, WY_BL_CHANNEL);
+      ledcWrite(WY_BL_CHANNEL, 255);
+  }
+  static inline void _wy_bl_set(uint8_t v) { ledcWrite(WY_BL_CHANNEL, v); }
+#else
+  static inline void _wy_bl_init() {
+      if (WY_DISPLAY_BL >= 0) { pinMode(WY_DISPLAY_BL, OUTPUT); digitalWrite(WY_DISPLAY_BL, HIGH); }
+  }
+  static inline void _wy_bl_set(uint8_t v) {
+      if (WY_DISPLAY_BL >= 0) digitalWrite(WY_DISPLAY_BL, v > 0 ? HIGH : LOW);
+  }
+#endif
 
 /* ══════════════════════════════════════════════════════════════════
- * Guition ESP32-S3-4848S040
- * ST7701S RGB panel, 480×480, backlight GPIO38
+ * RGB parallel panel (Guition 4848S040, Sunton 8048S043, etc.)
  * ══════════════════════════════════════════════════════════════════ */
-#if defined(WY_BOARD_GUITION4848S040)
-
-#define WY_SCREEN_W 480
-#define WY_SCREEN_H 480
-#define WY_BL_PIN   38
+#if defined(WY_DISPLAY_BUS_RGB16)
 
 class WyDisplay {
 public:
-    Arduino_ST7701_RGBPanel *gfx = nullptr;
+    Arduino_GFX *gfx = nullptr;
     uint16_t width  = WY_SCREEN_W;
     uint16_t height = WY_SCREEN_H;
 
     void begin() {
-        auto *bus = new Arduino_ESP32RGBPanel(
-            39, 48, 47,
-            18, 17, 16, 21,
-            11,12,13,14,0,
-            8,20,3,46,9,10,
-            4,5,6,7,15);
+        #if defined(WY_BOARD_GUITION4848S040)
+        auto *rgbbus = new Arduino_ESP32RGBPanel(
+            WY_RGB_DE, WY_RGB_VSYNC, WY_RGB_HSYNC,
+            WY_RGB_PCLK,
+            WY_RGB_R0, WY_RGB_R1, WY_RGB_R2, WY_RGB_R3, WY_RGB_R4,
+            WY_RGB_G0, WY_RGB_G1, WY_RGB_G2, WY_RGB_G3, WY_RGB_G4, WY_RGB_G5,
+            WY_RGB_B0, WY_RGB_B1, WY_RGB_B2, WY_RGB_B3, WY_RGB_B4);
         gfx = new Arduino_ST7701_RGBPanel(
-            bus, GFX_NOT_DEFINED, 0, true, WY_SCREEN_W, WY_SCREEN_H,
+            rgbbus, GFX_NOT_DEFINED, WY_DISPLAY_ROT, true,
+            WY_DISPLAY_W, WY_DISPLAY_H,
             st7701_type1_init_operations, sizeof(st7701_type1_init_operations), true,
-            10,8,50, 10,8,20);
-        gfx->begin();
-        pinMode(WY_BL_PIN, OUTPUT);
-        digitalWrite(WY_BL_PIN, HIGH);
+            10, 8, 50, 10, 8, 20);
+
+        #elif defined(WY_BOARD_SUNTON_8048S043)
+        auto *rgbbus = new Arduino_ESP32RGBPanel(
+            WY_RGB_DE, WY_RGB_VSYNC, WY_RGB_HSYNC,
+            WY_RGB_PCLK,
+            WY_RGB_R0, WY_RGB_R1, WY_RGB_R2, WY_RGB_R3, WY_RGB_R4,
+            WY_RGB_G0, WY_RGB_G1, WY_RGB_G2, WY_RGB_G3, WY_RGB_G4, WY_RGB_G5,
+            WY_RGB_B0, WY_RGB_B1, WY_RGB_B2, WY_RGB_B3, WY_RGB_B4);
+        gfx = new Arduino_RGB_Display(
+            WY_DISPLAY_W, WY_DISPLAY_H, rgbbus, WY_DISPLAY_ROT, true);
+        #endif
+
+        if (gfx) gfx->begin();
+        _wy_bl_init();
     }
 
-    void setBrightness(bool on) { digitalWrite(WY_BL_PIN, on ? HIGH : LOW); }
+    void setBrightness(uint8_t v) { _wy_bl_set(v); }
 };
 
 /* ══════════════════════════════════════════════════════════════════
- * CYD — ESP32-2432S028R
- * ILI9341 SPI, 320×240, backlight GPIO21
+ * 8-bit parallel (WT32-SC01 Plus, etc.)
  * ══════════════════════════════════════════════════════════════════ */
-#elif defined(WY_BOARD_CYD)
-
-#define WY_SCREEN_W 320
-#define WY_SCREEN_H 240
-#define WY_BL_PIN   21
-
-#ifndef WY_CYD_CS
-  #define WY_CYD_CS   15
-#endif
-#ifndef WY_CYD_DC
-  #define WY_CYD_DC    2
-#endif
-#ifndef WY_CYD_RST
-  #define WY_CYD_RST  -1
-#endif
-#ifndef WY_CYD_SCK
-  #define WY_CYD_SCK  14
-#endif
-#ifndef WY_CYD_MOSI
-  #define WY_CYD_MOSI 13
-#endif
-#ifndef WY_CYD_MISO
-  #define WY_CYD_MISO 12
-#endif
+#elif defined(WY_DISPLAY_BUS_PAR8)
 
 class WyDisplay {
 public:
-    Arduino_ILI9341 *gfx = nullptr;
+    Arduino_GFX *gfx = nullptr;
+    uint16_t width  = WY_SCREEN_W;
+    uint16_t height = WY_SCREEN_H;
+
+    void begin() {
+        auto *bus = new Arduino_ESP32LCD8(
+            WY_DISPLAY_DC, GFX_NOT_DEFINED,
+            WY_DISPLAY_WR, GFX_NOT_DEFINED,
+            WY_DISPLAY_D0, WY_DISPLAY_D1, WY_DISPLAY_D2, WY_DISPLAY_D3,
+            WY_DISPLAY_D4, WY_DISPLAY_D5, WY_DISPLAY_D6, WY_DISPLAY_D7);
+
+        #if defined(WY_DISPLAY_ST7796)
+        gfx = new Arduino_ST7796(bus, GFX_NOT_DEFINED, WY_DISPLAY_ROT, true);
+        #endif
+
+        if (gfx) gfx->begin();
+        _wy_bl_init();
+    }
+
+    void setBrightness(uint8_t v) { _wy_bl_set(v); }
+};
+
+/* ══════════════════════════════════════════════════════════════════
+ * SPI displays (CYD ILI9341, ST7789, ST7796, GC9A01)
+ * ══════════════════════════════════════════════════════════════════ */
+#elif defined(WY_DISPLAY_BUS_SPI)
+
+class WyDisplay {
+public:
+    Arduino_GFX *gfx = nullptr;
     uint16_t width  = WY_SCREEN_W;
     uint16_t height = WY_SCREEN_H;
 
     void begin() {
         auto *bus = new Arduino_ESP32SPI(
-            WY_CYD_DC, WY_CYD_CS, WY_CYD_SCK, WY_CYD_MOSI, WY_CYD_MISO);
-        gfx = new Arduino_ILI9341(bus, WY_CYD_RST, 1 /* rotation */);
-        gfx->begin();
-        pinMode(WY_BL_PIN, OUTPUT);
-        ledcSetup(0, 5000, 8);
-        ledcAttachPin(WY_BL_PIN, 0);
-        ledcWrite(0, 255);
+            WY_DISPLAY_DC, WY_DISPLAY_CS,
+            WY_DISPLAY_SCK, WY_DISPLAY_MOSI,
+        #ifdef WY_DISPLAY_MISO
+            WY_DISPLAY_MISO
+        #else
+            GFX_NOT_DEFINED
+        #endif
+        );
+
+        #if defined(WY_DISPLAY_ILI9341)
+        gfx = new Arduino_ILI9341(bus, WY_DISPLAY_RST, WY_DISPLAY_ROT);
+        #elif defined(WY_DISPLAY_ST7796)
+        gfx = new Arduino_ST7796(bus, WY_DISPLAY_RST, WY_DISPLAY_ROT);
+        #elif defined(WY_DISPLAY_ST7789)
+        gfx = new Arduino_ST7789(bus, WY_DISPLAY_RST, WY_DISPLAY_ROT,
+            false, WY_DISPLAY_W, WY_DISPLAY_H);
+        #elif defined(WY_DISPLAY_GC9A01)
+        gfx = new Arduino_GC9A01(bus, WY_DISPLAY_RST, WY_DISPLAY_ROT, true);
+        #endif
+
+        if (gfx) {
+            gfx->begin();
+            #ifdef WY_DISPLAY_INVERT
+            gfx->invertDisplay(true);
+            #endif
+        }
+        _wy_bl_init();
     }
 
-    void setBrightness(uint8_t val) { ledcWrite(0, val); }
+    void setBrightness(uint8_t v) { _wy_bl_set(v); }
 };
 
-/* ══════════════════════════════════════════════════════════════════
- * Stub — no board selected
- * ══════════════════════════════════════════════════════════════════ */
-#else
-  #warning "WyDisplay: no board selected — define WY_BOARD_GUITION4848S040 or WY_BOARD_CYD"
-  class WyDisplay {
-  public:
-      void *gfx = nullptr;
-      uint16_t width = 0, height = 0;
-      void begin() {}
-      void setBrightness(uint8_t) {}
-  };
-#endif
+#endif  /* bus type */
+
+#else   /* WY_HAS_DISPLAY == 0 */
+
+/* Stub when no display defined */
+class WyDisplay {
+public:
+    void *gfx = nullptr;
+    uint16_t width = 0, height = 0;
+    void begin() {}
+    void setBrightness(uint8_t) {}
+};
+
+#endif  /* WY_HAS_DISPLAY */
