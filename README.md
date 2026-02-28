@@ -28,6 +28,16 @@ The rule: **every reusable piece lives here**. Project repos only contain projec
 // Changes: adapted for Wy* API, stripped platform deps
 ```
 
+### Licensing rules
+
+- **Check the license before forking anything.** If it's GPL/LGPL, wrapping it in a Wy* header does not escape the copyleft — the combined work must be GPL-compatible.
+- **Permissive licenses (MIT, BSD, Apache 2.0, ISC)** — fork freely, attribute, include the original LICENSE file in the fork.
+- **LGPL** — can link dynamically (not applicable in embedded/static builds). For ESP32 static builds, treat as GPL unless the original author grants an exception.
+- **GPL** — do not incorporate into wyltek-embedded-builder (MIT). Can be used in standalone project repos if the project is also GPL, but document clearly.
+- **No-license / All Rights Reserved** — do not use. No exceptions.
+- **Attribution is not optional.** Original author name, license, and source URL go in every file header that wraps or derives from third-party code.
+- When uncertain about a license interaction — check first, don't assume.
+
 ## Modules
 
 | Module | Class | What it does |
@@ -89,4 +99,6 @@ Confirmed working:
 
 ## License
 
-MIT
+Wyltek Embedded Builder is MIT licensed.
+
+Third-party components wrapped within this library retain their original licenses. Each `Wy*` wrapper file that incorporates third-party code includes the original license, author, and source URL in its header comment. See individual files and `LICENSES/` for full text of third-party licenses.
