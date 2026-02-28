@@ -904,12 +904,19 @@
   #define WY_DISPLAY_W        128
   #define WY_DISPLAY_H        128
   #define WY_DISPLAY_ROT      0
+  /* Shared SPI bus */
+  #define WY_DISPLAY_DC       42
   #define WY_DISPLAY_SCK      3
   #define WY_DISPLAY_MOSI     2
   #define WY_DISPLAY_MISO     -1
   #define WY_DISPLAY_RST      -1
   #define WY_DISPLAY_BL       38
-  #define WY_DISPLAY_BL_PWM   1
+  #define WY_DISPLAY_BL_PWM   0
+  /* Individual CS pin per keycap display */
+  #define WY_KDISP_CS0        10
+  #define WY_KDISP_CS1        11
+  #define WY_KDISP_CS2        12
+  #define WY_KDISP_CS3        13
   #define WY_HAS_TOUCH        0
   /* STM32 co-processor I2C (key scanning + LED) */
   #define WY_KB_SDA           8

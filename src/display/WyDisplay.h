@@ -2,9 +2,12 @@
  * WyDisplay.h — Display abstraction for wyltek-embedded-builder
  * ==============================================================
  * Reads board config from boards.h. Supports:
- *   - SPI displays: ILI9341, ST7796, ST7789, GC9A01
+ *   - SPI displays: ILI9341, ST7796, ST7789, GC9A01, GC9107
  *   - RGB parallel: ST7701S (Guition 4848), ST7262 (Sunton 8048)
  *   - 8-bit parallel: ST7796 (WT32-SC01 Plus)
+ *
+ * Note: GC9107 (T-Keyboard keycap displays) uses GC9A01 driver.
+ *   For the T-Keyboard's 4-display setup, use WyKeyDisplay.h instead.
  *
  * Usage:
  *   #include <WyDisplay.h>
@@ -155,7 +158,8 @@ public:
         #elif defined(WY_DISPLAY_ST7789)
         gfx = new Arduino_ST7789(bus, WY_DISPLAY_RST, WY_DISPLAY_ROT,
             false, WY_DISPLAY_W, WY_DISPLAY_H);
-        #elif defined(WY_DISPLAY_GC9A01)
+        #elif defined(WY_DISPLAY_GC9A01) || defined(WY_DISPLAY_GC9107)
+        /* GC9107 is a stripped-down GC9A01 — same driver, same init sequence */
         gfx = new Arduino_GC9A01(bus, WY_DISPLAY_RST, WY_DISPLAY_ROT, true);
         #endif
 

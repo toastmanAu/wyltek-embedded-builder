@@ -13,6 +13,7 @@
 
 #pragma once
 #include "display/WyDisplay.h"
+#include "display/WyKeyDisplay.h"
 #include "touch/WyTouch.h"
 #include "settings/WySettings.h"
 #include "net/WyNet.h"
