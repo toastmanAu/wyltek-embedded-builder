@@ -17,3 +17,4 @@
 #include "settings/WySettings.h"
 #include "net/WyNet.h"
 #include "sensors/WySensors.h"
+#include "ui/WyScreenshot.h"
