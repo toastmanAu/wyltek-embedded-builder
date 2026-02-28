@@ -866,30 +866,29 @@
   #define WY_SCREEN_H         WY_DISPLAY_H
 
 /* ══════════════════════════════════════════════════════════════════
- * LilyGo T-Keyboard S3 Pro — 4 mechanical keys with per-key displays
+ * LilyGo T-Keyboard S3 — 4 mechanical keys with per-key displays
  * ══════════════════════════════════════════════════════════════════
- * MCU1:    ESP32-S3R8, dual-core 240MHz, 16MB flash, 8MB PSRAM
- * MCU2:    STM32G030F6P6 co-processor (key scanning, LED control)
- * Display: 4× GC9107, SPI, 128×128, 0.85" — one per mechanical keycap
- *          Each key IS a tiny programmable display. Individually addressable.
- * Keys:    4 mechanical switches with per-key RGB WS2812 (14 total LEDs)
- * Expand:  Magnetic daisy-chain I2C connectors — up to 6 units in a grid
- *          Master (ESP32-S3) + up to 5 slave units (STM32 only, no S3)
- *          Grid layout: 2 left/right + 2 down = up to 2×3 (6 boards)
+ * MCU:     ESP32-S3R8 (WROOM-1), dual-core 240MHz, 16MB flash, 8MB PSRAM
+ * Display: 4x GC9107, SPI, 128x128, 0.85" — one per mechanical keycap
+ *          Model: N085-1212TBWIG06-C08
+ *          Shared SPI bus (SCK=47, MOSI=48, DC=45, RST=38)
+ *          CS is GPIO-controlled (not SPI HW): CS1=12 CS2=13 CS3=14 CS4=21
+ *          col_offset=2, row_offset=1 (required for correct display origin)
+ * Keys:    4 hot-swap mechanical switches (Kailh compatible, 6.35mm pitch)
+ *          KEY1=10, KEY2=9, KEY3=46, KEY4=3 (KEY4 also BOOT0 — avoid at boot)
+ * LEDs:    14x WS2812B addressable RGB (DATA=11)
  * Wireless: 2.4GHz WiFi + BLE5
  * USB:     USB-C native (ESP32-S3 native USB)
  *
- * Use cases: custom SBC macro pads, per-key status displays, crypto
- *   hardware UI (CKB price per key, block height per key etc),
- *   programmable shortcut panels with live visual feedback
+ * Use WyKeyDisplay.h for the multi-display API (select/draw/deselect).
+ * Use cases: CKB node status macro pad, SBC control surface,
+ *   programmable shortcut panel with live per-key visual feedback
  *
- * ⚠️ 4 separate GC9107 displays — each driven independently via SPI
- * ⚠️ When chaining units: reduce LED brightness to ≤10 (heat/current)
- * ⚠️ Default firmware is I2C expansion mode — single unit needs reflash
- * Ref: github.com/Xinyuan-LilyGo/T-Keyboard-S3-Pro
+ * IMPORTANT: GC9107 needs col_offset=2, row_offset=1 — handled in WyKeyDisplay.h
+ * Ref: github.com/Xinyuan-LilyGO/T-Keyboard-S3 (GPL 3.0 — pin mapping only)
  */
 #elif defined(WY_BOARD_LILYGO_TKEYBOARD_S3)
-  #define WY_BOARD_NAME       "LilyGo T-Keyboard S3 Pro (4x GC9107 128x128)"
+  #define WY_BOARD_NAME       "LilyGo T-Keyboard S3 (4x GC9107 128x128)"
   #define WY_MCU_ESP32S3
   #define WY_MCU_CORES        2
   #define WY_MCU_FREQ         240
@@ -904,19 +903,35 @@
   #define WY_DISPLAY_W        128
   #define WY_DISPLAY_H        128
   #define WY_DISPLAY_ROT      0
-  /* Shared SPI bus */
-  #define WY_DISPLAY_DC       42
-  #define WY_DISPLAY_SCK      3
-  #define WY_DISPLAY_MOSI     2
-  #define WY_DISPLAY_MISO     -1
-  #define WY_DISPLAY_RST      -1
-  #define WY_DISPLAY_BL       38
-  #define WY_DISPLAY_BL_PWM   0
-  /* Individual CS pin per keycap display */
-  #define WY_KDISP_CS0        10
-  #define WY_KDISP_CS1        11
-  #define WY_KDISP_CS2        12
-  #define WY_KDISP_CS3        13
+  /* Shared SPI bus — CS managed manually by WyKeyDisplay::select() */
+  #define WY_KDISP_SCK        47
+  #define WY_KDISP_MOSI       48
+  #define WY_KDISP_DC         45
+  #define WY_KDISP_RST        38
+  #define WY_KDISP_BL         39
+  #define WY_KDISP_BL_CHAN    1   /* ledc channel */
+  /* CS per keycap display (active LOW, GPIO-controlled not SPI) */
+  #define WY_KDISP_CS0        12  /* KEY1 display */
+  #define WY_KDISP_CS1        13  /* KEY2 display */
+  #define WY_KDISP_CS2        14  /* KEY3 display */
+  #define WY_KDISP_CS3        21  /* KEY4 display */
+  /* Mechanical key sense pins (active LOW, use INPUT_PULLUP) */
+  #define WY_KEY1             10
+  #define WY_KEY2             9
+  #define WY_KEY3             46
+  #define WY_KEY4             3   /* Also BOOT0 — avoid during startup */
+  /* WS2812B RGB LEDs */
+  #define WY_WS2812_DATA      11
+  #define WY_WS2812_COUNT     14  /* 14 addressable LEDs total */
+  /* WyDisplay compat aliases */
+  #define WY_DISPLAY_DC       WY_KDISP_DC
+  #define WY_DISPLAY_CS       GFX_NOT_DEFINED
+  #define WY_DISPLAY_SCK      WY_KDISP_SCK
+  #define WY_DISPLAY_MOSI     WY_KDISP_MOSI
+  #define WY_DISPLAY_RST      WY_KDISP_RST
+  #define WY_DISPLAY_BL       WY_KDISP_BL
+  #define WY_DISPLAY_BL_PWM   1
+  #define WY_HAS_TOUCH        0
   #define WY_HAS_TOUCH        0
   /* STM32 co-processor I2C (key scanning + LED) */
   #define WY_KB_SDA           8

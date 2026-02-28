@@ -1,34 +1,48 @@
 /*
- * WyKeyDisplay.h — Multi-display driver for LilyGo T-Keyboard S3 Pro
- * ====================================================================
- * The T-Keyboard S3 Pro has 4 mechanical keys, each with its own
- * 0.85" GC9107 128×128 display embedded in the keycap. All 4 displays
- * share the same SPI bus (SCK/MOSI) but have individual CS pins.
+ * WyKeyDisplay.h — Multi-display driver for LilyGo T-Keyboard S3
+ * ================================================================
+ * The T-Keyboard S3 has 4 mechanical keys, each with a 0.85"
+ * GC9107 128×128 display embedded in the keycap.
  *
- * The GC9107 uses the GC9A01 driver (identical init sequence).
+ * Hardware architecture (from LilyGo official source):
+ *   - ONE shared SPI bus (SCK=47, MOSI=48, DC=45, RST=38, BL=39)
+ *   - CS is NOT driven by the SPI controller — it's plain GPIO
+ *   - Select a display by pulling its CS GPIO LOW, others HIGH
+ *   - All 4 share the same Arduino_GFX instance; caller selects
+ *     which display receives the data before each draw call
+ *
+ * CS pins: CS1=12, CS2=13, CS3=14, CS4=21
+ * Key pins: KEY1=10, KEY2=9, KEY3=46, KEY4=3
+ *
+ * The GC9107 uses Arduino_GC9107 driver (distinct from GC9A01,
+ * though the silicon is related — GC9107 has different init params).
  *
  * Usage:
  *   #include <display/WyKeyDisplay.h>
  *   WyKeyDisplay keys;
  *   keys.begin();
- *   keys.key[0]->fillScreen(WY_BLACK);         // draw on key 0
- *   keys.key[2]->drawString("CKB", 20, 50, 2); // draw on key 2
- *   keys.key[3]->drawNumber(blockHeight, 10, 50, 4);
  *
- * Key layout (when USB-C is at bottom):
- *   [0] [1]
- *   [2] [3]
+ *   keys.select(0);                    // point bus at key 0
+ *   keys.gfx->fillScreen(WY_BLACK);   // draw to key 0
  *
- * Pin mapping (T-Keyboard S3 Pro default):
- *   SCK   = 3   MOSI  = 2   DC = 42
- *   CS0   = 10  CS1   = 11  CS2 = 12  CS3 = 13
- *   BL    = 38  RST   = -1
+ *   keys.select(2);
+ *   keys.gfx->drawString("CKB", 20, 50, 2);
+ *
+ *   keys.selectAll();                  // broadcast to all 4
+ *   keys.gfx->fillScreen(WY_BLACK);   // clear all at once
+ *
+ * Key layout (USB-C at bottom):
+ *   [0/KEY1] [1/KEY2]
+ *   [2/KEY3] [3/KEY4]
  *
  * ⚠️ Only compiled when WY_BOARD_LILYGO_TKEYBOARD_S3 is defined.
- * ⚠️ WyDisplay.h handles single-display boards — do NOT include both.
- * ⚠️ Requires Arduino_GFX_Library in lib_deps.
+ * ⚠️ License note: this is an independent implementation.
+ *    LilyGo's official drive code (T-Keyboard_S3_Drive) is GPL 3.0
+ *    and is NOT used here. Pin mapping sourced from public hardware docs.
+ * ⚠️ Requires Arduino_GFX_Library with GC9107 support.
+ *    lib_deps: moononournation/GFX Library for Arduino (>=1.4.7)
  *
- * Ref: github.com/Xinyuan-LilyGO/T-Keyboard-S3-Pro
+ * Ref: github.com/Xinyuan-LilyGO/T-Keyboard-S3
  */
 
 #pragma once
@@ -38,41 +52,6 @@
 
 #include <Arduino.h>
 #include <Arduino_GFX_Library.h>
-
-/* ── Pin definitions ────────────────────────────────────────────── */
-/* Override these before including this header if your unit differs  */
-#ifndef WY_KDISP_SCK
-  #define WY_KDISP_SCK    3
-#endif
-#ifndef WY_KDISP_MOSI
-  #define WY_KDISP_MOSI   2
-#endif
-#ifndef WY_KDISP_DC
-  #define WY_KDISP_DC     42
-#endif
-#ifndef WY_KDISP_RST
-  #define WY_KDISP_RST    GFX_NOT_DEFINED
-#endif
-#ifndef WY_KDISP_BL
-  #define WY_KDISP_BL     38
-#endif
-/* CS pin for each key display */
-#ifndef WY_KDISP_CS0
-  #define WY_KDISP_CS0    10
-#endif
-#ifndef WY_KDISP_CS1
-  #define WY_KDISP_CS1    11
-#endif
-#ifndef WY_KDISP_CS2
-  #define WY_KDISP_CS2    12
-#endif
-#ifndef WY_KDISP_CS3
-  #define WY_KDISP_CS3    13
-#endif
-
-#define WY_KDISP_W   128
-#define WY_KDISP_H   128
-#define WY_KDISP_NUM 4
 
 /* ── Colours (shared with WyDisplay.h) ─────────────────────────── */
 #ifndef WY_BLACK
@@ -89,90 +68,174 @@
   #define WY_DARKGRAY 0x4208
 #endif
 
+#define WY_KDISP_W   128
+#define WY_KDISP_H   128
+#define WY_KDISP_NUM 4
+
 /* ── WyKeyDisplay class ─────────────────────────────────────────── */
 class WyKeyDisplay {
 public:
-    /* One Arduino_GFX pointer per key — draw to each independently */
-    Arduino_GFX *key[WY_KDISP_NUM] = {};
+    Arduino_GFX *gfx = nullptr;  /* Single GFX instance — shared bus */
     uint16_t width  = WY_KDISP_W;
     uint16_t height = WY_KDISP_H;
 
     void begin() {
-        static const int8_t cs_pins[WY_KDISP_NUM] = {
-            WY_KDISP_CS0, WY_KDISP_CS1, WY_KDISP_CS2, WY_KDISP_CS3
-        };
-
+        /* Init CS pins as outputs, all HIGH (deselected) */
         for (int i = 0; i < WY_KDISP_NUM; i++) {
-            auto *bus = new Arduino_ESP32SPI(
-                WY_KDISP_DC, cs_pins[i],
-                WY_KDISP_SCK, WY_KDISP_MOSI,
-                GFX_NOT_DEFINED   /* MISO not needed */
-            );
-            /* GC9107 = GC9A01 with different part number — same init */
-            key[i] = new Arduino_GC9A01(bus, WY_KDISP_RST, 0, true);
-            key[i]->begin();
-            key[i]->fillScreen(WY_BLACK);
+            pinMode(_cs[i], OUTPUT);
+            digitalWrite(_cs[i], HIGH);
+        }
+
+        /* Shared SPI bus — CS managed manually via select() */
+        auto *bus = new Arduino_ESP32SPI(
+            WY_KDISP_DC,          /* DC  */
+            GFX_NOT_DEFINED,      /* CS  — managed by select() */
+            WY_KDISP_SCK,         /* SCK */
+            WY_KDISP_MOSI,        /* MOSI */
+            GFX_NOT_DEFINED       /* MISO */
+        );
+
+        /* GC9107: 128×128, col_offset1=2, row_offset1=1 (from LilyGo source) */
+        gfx = new Arduino_GC9107(
+            bus, WY_KDISP_RST, 0 /* rotation */, true /* IPS */,
+            WY_KDISP_W, WY_KDISP_H,
+            2 /* col_offset1 */, 1 /* row_offset1 */
+        );
+
+        /* Pull all CS low for simultaneous init (reset + begin all displays) */
+        selectAll();
+        if (WY_KDISP_RST >= 0) {
+            pinMode(WY_KDISP_RST, OUTPUT);
+            digitalWrite(WY_KDISP_RST, LOW);
+            delay(10);
+            digitalWrite(WY_KDISP_RST, HIGH);
+            delay(120);
+        }
+        gfx->begin();
+        gfx->fillScreen(WY_BLACK);
+
+        /* Deselect all */
+        for (int i = 0; i < WY_KDISP_NUM; i++) {
+            digitalWrite(_cs[i], HIGH);
         }
 
         /* Backlight on */
-        if (WY_KDISP_BL >= 0) {
-            pinMode(WY_KDISP_BL, OUTPUT);
-            digitalWrite(WY_KDISP_BL, HIGH);
-        }
+        ledcSetup(WY_KDISP_BL_CHAN, 2000, 8);
+        ledcAttachPin(WY_KDISP_BL, WY_KDISP_BL_CHAN);
+        ledcWrite(WY_KDISP_BL_CHAN, 255);
     }
 
-    /* Fill all 4 keys with same colour */
-    void fillAll(uint16_t colour) {
+    /* Select one display (0–3). Deselects all others. */
+    void select(uint8_t idx) {
         for (int i = 0; i < WY_KDISP_NUM; i++) {
-            if (key[i]) key[i]->fillScreen(colour);
+            digitalWrite(_cs[i], (i == idx) ? LOW : HIGH);
         }
     }
 
-    /* Draw a centred label on one key (uses built-in GFX font) */
+    /* Select all displays — next draw call hits all 4 simultaneously */
+    void selectAll() {
+        for (int i = 0; i < WY_KDISP_NUM; i++) {
+            digitalWrite(_cs[i], LOW);
+        }
+    }
+
+    /* Deselect all */
+    void deselect() {
+        for (int i = 0; i < WY_KDISP_NUM; i++) {
+            digitalWrite(_cs[i], HIGH);
+        }
+    }
+
+    /* Set backlight brightness 0–255 */
+    void setBrightness(uint8_t v) {
+        ledcWrite(WY_KDISP_BL_CHAN, v);
+    }
+
+    /* ── Convenience helpers ──────────────────────────────────────
+     * Each helper selects the target key, draws, then deselects.   */
+
+    /* Fill all 4 keys with one colour */
+    void fillAll(uint16_t colour) {
+        selectAll();
+        gfx->fillScreen(colour);
+        deselect();
+    }
+
+    /* Centred label on one key */
     void setLabel(uint8_t idx, const char *text,
                   uint16_t fg = WY_WHITE, uint16_t bg = WY_BLACK,
                   uint8_t textSize = 2) {
-        if (idx >= WY_KDISP_NUM || !key[idx]) return;
-        key[idx]->fillScreen(bg);
-        key[idx]->setTextColor(fg);
-        key[idx]->setTextSize(textSize);
-        /* Rough centre — 6px per char per textSize unit */
+        if (idx >= WY_KDISP_NUM) return;
+        select(idx);
+        gfx->fillScreen(bg);
+        gfx->setTextColor(fg);
+        gfx->setTextSize(textSize);
         int16_t tw = strlen(text) * 6 * textSize;
         int16_t th = 8 * textSize;
-        key[idx]->setCursor((WY_KDISP_W - tw) / 2, (WY_KDISP_H - th) / 2);
-        key[idx]->print(text);
+        gfx->setCursor((WY_KDISP_W - tw) / 2, (WY_KDISP_H - th) / 2);
+        gfx->print(text);
+        deselect();
     }
 
-    /* Draw a 2-line label (top = small, bottom = large value) */
+    /* 2-line metric display: small label top, large value bottom */
     void setMetric(uint8_t idx, const char *label, const char *value,
                    uint16_t labelCol = WY_GRAY, uint16_t valueCol = WY_CYAN,
                    uint16_t bg = WY_BLACK) {
-        if (idx >= WY_KDISP_NUM || !key[idx]) return;
-        key[idx]->fillScreen(bg);
-        /* Label — small, upper third */
-        key[idx]->setTextSize(1);
-        key[idx]->setTextColor(labelCol);
+        if (idx >= WY_KDISP_NUM) return;
+        select(idx);
+        gfx->fillScreen(bg);
+        /* Label — small, upper area */
+        gfx->setTextSize(1);
+        gfx->setTextColor(labelCol);
         int16_t lw = strlen(label) * 6;
-        key[idx]->setCursor((WY_KDISP_W - lw) / 2, 30);
-        key[idx]->print(label);
-        /* Value — larger, lower half */
-        key[idx]->setTextSize(2);
-        key[idx]->setTextColor(valueCol);
-        int16_t vw = strlen(value) * 12;
-        if (vw > WY_KDISP_W) { key[idx]->setTextSize(1); vw = strlen(value)*6; }
-        key[idx]->setCursor((WY_KDISP_W - vw) / 2, 65);
-        key[idx]->print(value);
+        gfx->setCursor((WY_KDISP_W - lw) / 2, 28);
+        gfx->print(label);
+        /* Value — larger, centred vertically in lower half */
+        uint8_t vSize = 3;
+        int16_t vw = strlen(value) * 6 * vSize;
+        if (vw > WY_KDISP_W - 4) { vSize = 2; vw = strlen(value) * 12; }
+        if (vw > WY_KDISP_W - 4) { vSize = 1; vw = strlen(value) * 6; }
+        gfx->setTextSize(vSize);
+        gfx->setTextColor(valueCol);
+        gfx->setCursor((WY_KDISP_W - vw) / 2, 62);
+        gfx->print(value);
+        deselect();
     }
+
+    /* Read key state (active LOW) */
+    bool keyPressed(uint8_t idx) {
+        if (idx >= WY_KDISP_NUM) return false;
+        return digitalRead(_keyPin[idx]) == LOW;
+    }
+
+    /* Attach interrupt to a key */
+    void attachKeyInterrupt(uint8_t idx, void (*isr)(), int mode = FALLING) {
+        if (idx >= WY_KDISP_NUM) return;
+        pinMode(_keyPin[idx], INPUT_PULLUP);
+        attachInterrupt(digitalPinToInterrupt(_keyPin[idx]), isr, mode);
+    }
+
+private:
+    const int8_t _cs[WY_KDISP_NUM]     = { WY_KDISP_CS0, WY_KDISP_CS1,
+                                             WY_KDISP_CS2, WY_KDISP_CS3 };
+    const int8_t _keyPin[WY_KDISP_NUM] = { WY_KEY1, WY_KEY2, WY_KEY3, WY_KEY4 };
 };
 
 #else
-/* Stub for non-T-Keyboard builds */
+/* Stub for non-T-Keyboard builds — zero overhead */
 class WyKeyDisplay {
 public:
-    void *key[4] = {};
+    void *gfx = nullptr;
+    uint16_t width = 0, height = 0;
     void begin() {}
+    void select(uint8_t) {}
+    void selectAll() {}
+    void deselect() {}
+    void setBrightness(uint8_t) {}
     void fillAll(uint16_t) {}
     void setLabel(uint8_t, const char*, uint16_t=0, uint16_t=0, uint8_t=2) {}
     void setMetric(uint8_t, const char*, const char*, uint16_t=0, uint16_t=0, uint16_t=0) {}
+    bool keyPressed(uint8_t) { return false; }
+    void attachKeyInterrupt(uint8_t, void(*)(), int=1) {}
 };
 #endif /* WY_BOARD_LILYGO_TKEYBOARD_S3 */
