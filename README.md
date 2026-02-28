@@ -10,6 +10,24 @@ Write your application once. Point it at a board. It works.
 
 No copy-pasting display init sequences. No re-implementing captive portals. No per-project settings boilerplate. Just include what you need and build the thing.
 
+## Growth Policy
+
+This library grows with real projects. When a project needs something that doesn't exist here:
+
+1. **Build it here first** as a `Wy*` component — not inside the project repo
+2. **External dependencies** — if it wraps a third-party lib, fork it to `toastmanAu/`, attribute clearly in the header, add as `lib_deps`
+3. **Use it in the project** via `lib_deps = https://github.com/toastmanAu/wyltek-embedded-builder`
+
+The rule: **every reusable piece lives here**. Project repos only contain project-specific code.
+
+### Attribution format (for wrapped libs)
+```cpp
+// WyFoo.h — wraps libfoo by Original Author (MIT)
+// Fork: https://github.com/toastmanAu/libfoo
+// Original: https://github.com/originalauthor/libfoo
+// Changes: adapted for Wy* API, stripped platform deps
+```
+
 ## Modules
 
 | Module | Class | What it does |
