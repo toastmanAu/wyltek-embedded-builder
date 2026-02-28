@@ -1871,3 +1871,110 @@
   #define WY_TOUCH_CS            5
   #define WY_TOUCH_IRQ           33
 
+
+// ═══════════════════════════════════════════════════════════════════
+// Guition JC3248W535 — 3.5" 320×480 ESP32-S3 HMI
+// ESP32-S3R8, 8MB PSRAM, 16MB Flash, ST7796 320×480 SPI, GT911 touch
+// ═══════════════════════════════════════════════════════════════════
+#elif defined(WY_BOARD_GUITION_3248W535)
+  #define WY_BOARD_NAME          "Guition JC3248W535 3.5\""
+  #define WY_MCU                 "ESP32-S3"
+  #define WY_ARCH                "xtensa-lx7"
+  #define WY_FLASH_MB            16
+  #define WY_PSRAM_MB            8
+  #define WY_CPU_MHZ             240
+  #define WY_HAS_WIFI            1
+  #define WY_HAS_BLE             1
+  #define WY_HAS_SD              1
+  #define WY_HAS_TOUCH           1
+  #define WY_DISPLAY_DRIVER      "ST7796"
+  #define WY_DISPLAY_W           320
+  #define WY_DISPLAY_H           480
+  #define WY_DISPLAY_BUS         "SPI"
+  #define WY_TFT_MOSI            13
+  #define WY_TFT_MISO            12
+  #define WY_TFT_SCK             11
+  #define WY_TFT_CS              10
+  #define WY_TFT_DC              9
+  #define WY_TFT_RST             8
+  #define WY_TFT_BL              0
+  #define WY_TOUCH_DRIVER        "GT911"
+  #define WY_I2C_SDA             4
+  #define WY_I2C_SCL             5
+  #define WY_TOUCH_INT           3
+  #define WY_SD_CS               14
+
+// ═══════════════════════════════════════════════════════════════════
+// Guition JC8048W550 — 5" 800×480 ESP32-S3 HMI
+// ESP32-S3R8, 8MB PSRAM, 16MB Flash, 800×480 RGB LCD, GT911 touch
+// ═══════════════════════════════════════════════════════════════════
+#elif defined(WY_BOARD_GUITION_8048W550)
+  #define WY_BOARD_NAME          "Guition JC8048W550 5\""
+  #define WY_MCU                 "ESP32-S3"
+  #define WY_ARCH                "xtensa-lx7"
+  #define WY_FLASH_MB            16
+  #define WY_PSRAM_MB            8
+  #define WY_CPU_MHZ             240
+  #define WY_HAS_WIFI            1
+  #define WY_HAS_BLE             1
+  #define WY_HAS_SD              1
+  #define WY_HAS_TOUCH           1
+  #define WY_DISPLAY_DRIVER      "ST7262"
+  #define WY_DISPLAY_W           800
+  #define WY_DISPLAY_H           480
+  #define WY_DISPLAY_BUS         "RGB"
+  // RGB pins (same family as 4.3" board)
+  #define WY_RGB_PCLK            7
+  #define WY_RGB_DE              5
+  #define WY_RGB_VSYNC           3
+  #define WY_RGB_HSYNC           46
+  #define WY_RGB_B0              14
+  #define WY_RGB_B1              38
+  #define WY_RGB_B2              18
+  #define WY_RGB_B3              17
+  #define WY_RGB_B4              10
+  #define WY_RGB_G0              39
+  #define WY_RGB_G1              0
+  #define WY_RGB_G2              45
+  #define WY_RGB_G3              48
+  #define WY_RGB_G4              47
+  #define WY_RGB_G5              21
+  #define WY_RGB_R0              11
+  #define WY_RGB_R1              12
+  #define WY_RGB_R2              13
+  #define WY_RGB_R3              1
+  #define WY_RGB_R4              2
+  #define WY_TOUCH_DRIVER        "GT911"
+  #define WY_I2C_SDA             8
+  #define WY_I2C_SCL             9
+  #define WY_TOUCH_INT           4
+  #define WY_SD_CS               -1
+
+// ═══════════════════════════════════════════════════════════════════
+// Guition JC2432W328 / JC3232W328 — 2.8/3.2" 320×240 ESP32-S3 HMI
+// ESP32-S3, ILI9341 320×240 SPI, XPT2046 resistive touch
+// ═══════════════════════════════════════════════════════════════════
+#elif defined(WY_BOARD_GUITION_3232W328)
+  #define WY_BOARD_NAME          "Guition JC3232W328 3.2\""
+  #define WY_MCU                 "ESP32-S3"
+  #define WY_ARCH                "xtensa-lx7"
+  #define WY_FLASH_MB            8
+  #define WY_PSRAM_MB            8
+  #define WY_CPU_MHZ             240
+  #define WY_HAS_WIFI            1
+  #define WY_HAS_BLE             1
+  #define WY_HAS_TOUCH           1
+  #define WY_DISPLAY_DRIVER      "ILI9341"
+  #define WY_DISPLAY_W           320
+  #define WY_DISPLAY_H           240
+  #define WY_TFT_MOSI            13
+  #define WY_TFT_MISO            12
+  #define WY_TFT_SCK             11
+  #define WY_TFT_CS              10
+  #define WY_TFT_DC              9
+  #define WY_TFT_RST             8
+  #define WY_TFT_BL              0
+  #define WY_TOUCH_DRIVER        "XPT2046"
+  #define WY_TOUCH_CS            7
+  #define WY_TOUCH_IRQ           6
+
