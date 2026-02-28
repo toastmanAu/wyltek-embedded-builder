@@ -261,3 +261,10 @@ private:
         return nullptr;
     }
 };
+
+// ── Audio & Sound ─────────────────────────────────────────────────
+#include "drivers/WyDYSV5W.h"    // DY-SV5W/SV8F serial MP3 player
+#include "drivers/WyMAX9814.h"   // MAX9814 auto-gain microphone
+
+// ── Input ─────────────────────────────────────────────────────────
+#include "drivers/WyKY040.h"     // KY-040 rotary encoder

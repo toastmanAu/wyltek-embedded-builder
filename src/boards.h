@@ -1657,3 +1657,217 @@
   #define WY_SCREEN_W     0
   #define WY_SCREEN_H     0
 #endif
+
+// ═══════════════════════════════════════════════════════════════════
+// LOLIN S3 Pro v1.0.0
+// ESP32-S3-WROOM-1, 16MB Flash, 8MB PSRAM (Octal), 25 IO
+// LOLIN I2C port, LOLIN Display port, MicroSD, LiPo charging 500mA
+// 65.3×25.4mm · https://www.wemos.cc/en/latest/s3/s3_pro.html
+// ═══════════════════════════════════════════════════════════════════
+#elif defined(WY_BOARD_LOLIN_S3_PRO)
+  #define WY_BOARD_NAME          "LOLIN S3 Pro"
+  #define WY_MCU                 "ESP32-S3"
+  #define WY_ARCH                "xtensa-lx7"
+  #define WY_FLASH_MB            16
+  #define WY_PSRAM_MB            8
+  #define WY_CPU_MHZ             240
+  #define WY_HAS_WIFI            1
+  #define WY_HAS_BLE             1
+  #define WY_HAS_SD              1
+  #define WY_HAS_BATTERY         1
+  // LOLIN I2C Port (Qwiic compatible)
+  #define WY_I2C_SDA             8
+  #define WY_I2C_SCL             9
+  // LOLIN Display Port (SPI)
+  #define WY_SPI_MOSI            11
+  #define WY_SPI_MISO            13
+  #define WY_SPI_SCK             12
+  #define WY_SPI_SS              10
+  // SD card (SPI shared)
+  #define WY_SD_CS               34
+  // Battery / charging
+  #define WY_BAT_ADC             1
+  // USB OTG
+  #define WY_USB_DP              20
+  #define WY_USB_DN              19
+
+// ═══════════════════════════════════════════════════════════════════
+// ESP32-C3 1.28" Round LCD (GC9A01, 240×240 IPS)
+// ESP32-C3, 4MB Flash, WiFi + BLE, 1.28" 240×240 round display
+// Popular AliExpress dev board — also sold as "ESP32-C3 LVGL"
+// ═══════════════════════════════════════════════════════════════════
+#elif defined(WY_BOARD_ESP32C3_GC9A01_128)
+  #define WY_BOARD_NAME          "ESP32-C3 GC9A01 1.28\""
+  #define WY_MCU                 "ESP32-C3"
+  #define WY_ARCH                "riscv32"
+  #define WY_FLASH_MB            4
+  #define WY_PSRAM_MB            0
+  #define WY_CPU_MHZ             160
+  #define WY_HAS_WIFI            1
+  #define WY_HAS_BLE             1
+  // GC9A01 display (SPI)
+  #define WY_DISPLAY_DRIVER      "GC9A01"
+  #define WY_DISPLAY_W           240
+  #define WY_DISPLAY_H           240
+  #define WY_DISPLAY_ROUND       1
+  #define WY_TFT_MOSI            7
+  #define WY_TFT_SCK             6
+  #define WY_TFT_CS              10
+  #define WY_TFT_DC              2
+  #define WY_TFT_RST             3
+  #define WY_TFT_BL              11
+  // I2C
+  #define WY_I2C_SDA             4
+  #define WY_I2C_SCL             5
+
+// ═══════════════════════════════════════════════════════════════════
+// Freenove ESP32-S3 WROOM CAM
+// ESP32-S3-WROOM-1, 8MB Flash, 8MB PSRAM, OV2640 camera
+// 44 GPIO exposed, USB OTG, LED flash GPIO48
+// https://github.com/Freenove/Freenove_ESP32_S3_WROOM_Board
+// ═══════════════════════════════════════════════════════════════════
+#elif defined(WY_BOARD_FREENOVE_ESP32S3_CAM)
+  #define WY_BOARD_NAME          "Freenove ESP32-S3 WROOM CAM"
+  #define WY_MCU                 "ESP32-S3"
+  #define WY_ARCH                "xtensa-lx7"
+  #define WY_FLASH_MB            8
+  #define WY_PSRAM_MB            8
+  #define WY_CPU_MHZ             240
+  #define WY_HAS_WIFI            1
+  #define WY_HAS_BLE             1
+  #define WY_HAS_CAMERA          1
+  // OV2640 camera (same as ESP32-CAM pinout)
+  #define WY_CAM_PWDN            -1
+  #define WY_CAM_RESET           -1
+  #define WY_CAM_XCLK            15
+  #define WY_CAM_SIOD            4
+  #define WY_CAM_SIOC            5
+  #define WY_CAM_D7              16
+  #define WY_CAM_D6              17
+  #define WY_CAM_D5              18
+  #define WY_CAM_D4              12
+  #define WY_CAM_D3              10
+  #define WY_CAM_D2              8
+  #define WY_CAM_D1              9
+  #define WY_CAM_D0              11
+  #define WY_CAM_VSYNC           6
+  #define WY_CAM_HREF            7
+  #define WY_CAM_PCLK            13
+  // LED flash
+  #define WY_LED_FLASH           48
+  // USB OTG
+  #define WY_USB_DP              20
+  #define WY_USB_DN              19
+
+// ═══════════════════════════════════════════════════════════════════
+// Tscinbuny ESP32-PLUS with OV2640
+// ESP32-WROVER (or WROOM), 4MB Flash, OV2640 camera
+// Similar to AI-Thinker ESP32-CAM but with extra IO breakout
+// ═══════════════════════════════════════════════════════════════════
+#elif defined(WY_BOARD_TSCINBUNY_ESP32_PLUS_CAM)
+  #define WY_BOARD_NAME          "Tscinbuny ESP32-PLUS CAM"
+  #define WY_MCU                 "ESP32"
+  #define WY_ARCH                "xtensa-lx6"
+  #define WY_FLASH_MB            4
+  #define WY_PSRAM_MB            4
+  #define WY_CPU_MHZ             240
+  #define WY_HAS_WIFI            1
+  #define WY_HAS_BLE             1
+  #define WY_HAS_CAMERA          1
+  // OV2640 — AI-Thinker ESP32-CAM compatible pinout
+  #define WY_CAM_PWDN            32
+  #define WY_CAM_RESET           -1
+  #define WY_CAM_XCLK            0
+  #define WY_CAM_SIOD            26
+  #define WY_CAM_SIOC            27
+  #define WY_CAM_D7              35
+  #define WY_CAM_D6              34
+  #define WY_CAM_D5              39
+  #define WY_CAM_D4              36
+  #define WY_CAM_D3              21
+  #define WY_CAM_D2              19
+  #define WY_CAM_D1              18
+  #define WY_CAM_D0              5
+  #define WY_CAM_VSYNC           25
+  #define WY_CAM_HREF            23
+  #define WY_CAM_PCLK            22
+  #define WY_SD_CS               4
+  #define WY_LED_FLASH           4
+
+// ═══════════════════════════════════════════════════════════════════
+// ESP32-S3 LVGL HMI RGB LCD (AliExpress generic — ST7262 / 800×480)
+// ESP32-S3R8, 8MB PSRAM, 16MB Flash, 4.3" 800×480 RGB LCD, GT911 touch
+// Commonly sold as "ESP32-S3 LVGL WiFi BLE HMI Development Board"
+// Similar to Waveshare ESP32-S3-Touch-LCD-4.3
+// ═══════════════════════════════════════════════════════════════════
+#elif defined(WY_BOARD_ESP32S3_LVGL_HMI_43)
+  #define WY_BOARD_NAME          "ESP32-S3 LVGL HMI 4.3\""
+  #define WY_MCU                 "ESP32-S3"
+  #define WY_ARCH                "xtensa-lx7"
+  #define WY_FLASH_MB            16
+  #define WY_PSRAM_MB            8
+  #define WY_CPU_MHZ             240
+  #define WY_HAS_WIFI            1
+  #define WY_HAS_BLE             1
+  #define WY_HAS_SD              1
+  #define WY_HAS_TOUCH           1
+  // RGB parallel LCD (ST7262 / ILI6485)
+  #define WY_DISPLAY_DRIVER      "ST7262"
+  #define WY_DISPLAY_W           800
+  #define WY_DISPLAY_H           480
+  #define WY_DISPLAY_BUS         "RGB"
+  // RGB bus pins (standard for this class of board)
+  #define WY_RGB_PCLK            7
+  #define WY_RGB_DE              5
+  #define WY_RGB_VSYNC           3
+  #define WY_RGB_HSYNC           46
+  #define WY_RGB_B0              14
+  #define WY_RGB_B1              38
+  #define WY_RGB_B2              18
+  #define WY_RGB_B3              17
+  #define WY_RGB_B4              10
+  #define WY_RGB_G0              39
+  #define WY_RGB_G1              0
+  #define WY_RGB_G2              45
+  #define WY_RGB_G3              48
+  #define WY_RGB_G4              47
+  #define WY_RGB_G5              21
+  #define WY_RGB_R0              11
+  #define WY_RGB_R1              12
+  #define WY_RGB_R2              13
+  #define WY_RGB_R3              1
+  #define WY_RGB_R4              2
+  // GT911 touch (I2C)
+  #define WY_TOUCH_DRIVER        "GT911"
+  #define WY_I2C_SDA             8
+  #define WY_I2C_SCL             9
+  #define WY_TOUCH_INT           4
+  #define WY_TOUCH_RST           -1
+  // Backlight
+  #define WY_TFT_BL              -1  // always on or controlled via expander
+
+// ═══════════════════════════════════════════════════════════════════
+// ILI9488 SPI Touchscreen (generic 3.5" / 4" module)
+// 480×320, XPT2046 resistive touch, SPI interface
+// Common on many carrier boards; virtual board for pin mapping
+// ═══════════════════════════════════════════════════════════════════
+#elif defined(WY_BOARD_ILI9488_SPI_GENERIC)
+  #define WY_BOARD_NAME          "ILI9488 SPI Generic"
+  #define WY_MCU                 ""   // peripheral only — pair with any MCU board
+  #define WY_DISPLAY_DRIVER      "ILI9488"
+  #define WY_DISPLAY_W           480
+  #define WY_DISPLAY_H           320
+  #define WY_DISPLAY_BUS         "SPI"
+  #define WY_HAS_TOUCH           1
+  #define WY_TOUCH_DRIVER        "XPT2046"
+  // Typical wiring when used with ESP32 (customise per project)
+  #define WY_TFT_MOSI            23
+  #define WY_TFT_MISO            19
+  #define WY_TFT_SCK             18
+  #define WY_TFT_CS              15
+  #define WY_TFT_DC              2
+  #define WY_TFT_RST             4
+  #define WY_TFT_BL              -1
+  #define WY_TOUCH_CS            5
+  #define WY_TOUCH_IRQ           33
+
