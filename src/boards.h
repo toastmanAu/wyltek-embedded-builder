@@ -866,32 +866,44 @@
   #define WY_SCREEN_H         WY_DISPLAY_H
 
 /* ══════════════════════════════════════════════════════════════════
- * LilyGo T-Keyboard S3 — ESP32-S3 with mechanical keyboard + display
+ * LilyGo T-Keyboard S3 Pro — 4 mechanical keys with per-key displays
  * ══════════════════════════════════════════════════════════════════
- * MCU:     ESP32-S3, dual-core 240MHz, 4MB flash, 2MB PSRAM
- * Display: ST7789, SPI, 135×240, 1.14" (same as TTGO T-Display)
- * Keyboard: 26-key QWERTY mechanical keyboard via I2C expander
- * Battery: 18650 lithium battery
- * USB:     USB-C native
+ * MCU1:    ESP32-S3R8, dual-core 240MHz, 16MB flash, 8MB PSRAM
+ * MCU2:    STM32G030F6P6 co-processor (key scanning, LED control)
+ * Display: 4× GC9107, SPI, 128×128, 0.85" — one per mechanical keycap
+ *          Each key IS a tiny programmable display. Individually addressable.
+ * Keys:    4 mechanical switches with per-key RGB WS2812 (14 total LEDs)
+ * Expand:  Magnetic daisy-chain I2C connectors — up to 6 units in a grid
+ *          Master (ESP32-S3) + up to 5 slave units (STM32 only, no S3)
+ *          Grid layout: 2 left/right + 2 down = up to 2×3 (6 boards)
+ * Wireless: 2.4GHz WiFi + BLE5
+ * USB:     USB-C native (ESP32-S3 native USB)
  *
- * ⚠️ Keyboard scanned via I2C IO expander (TCA8418 or similar)
- * ⚠️ Intended as a handheld input device — great for meshtastic
- *    messaging or field data entry
+ * Use cases: custom SBC macro pads, per-key status displays, crypto
+ *   hardware UI (CKB price per key, block height per key etc),
+ *   programmable shortcut panels with live visual feedback
+ *
+ * ⚠️ 4 separate GC9107 displays — each driven independently via SPI
+ * ⚠️ When chaining units: reduce LED brightness to ≤10 (heat/current)
+ * ⚠️ Default firmware is I2C expansion mode — single unit needs reflash
+ * Ref: github.com/Xinyuan-LilyGo/T-Keyboard-S3-Pro
  */
 #elif defined(WY_BOARD_LILYGO_TKEYBOARD_S3)
-  #define WY_BOARD_NAME       "LilyGo T-Keyboard S3 (1.14\" 135x240)"
+  #define WY_BOARD_NAME       "LilyGo T-Keyboard S3 Pro (4x GC9107 128x128)"
   #define WY_MCU_ESP32S3
   #define WY_MCU_CORES        2
   #define WY_MCU_FREQ         240
   #define WY_HAS_PSRAM        1
+  /* 4x GC9107 128x128 displays — one per mechanical keycap.
+   * WY_DISPLAY_* describes a single key display; app must drive all 4.
+   * Each display has its own CS pin — CS pins: KEY0=5 KEY1=6 KEY2=7 KEY3=8
+   * (verify against your unit — may vary by hardware revision) */
   #define WY_HAS_DISPLAY      1
-  #define WY_DISPLAY_ST7789
+  #define WY_DISPLAY_GC9107
   #define WY_DISPLAY_BUS_SPI
-  #define WY_DISPLAY_W        135
-  #define WY_DISPLAY_H        240
-  #define WY_DISPLAY_ROT      1
-  #define WY_DISPLAY_DC       6
-  #define WY_DISPLAY_CS       5
+  #define WY_DISPLAY_W        128
+  #define WY_DISPLAY_H        128
+  #define WY_DISPLAY_ROT      0
   #define WY_DISPLAY_SCK      3
   #define WY_DISPLAY_MOSI     2
   #define WY_DISPLAY_MISO     -1
@@ -899,7 +911,7 @@
   #define WY_DISPLAY_BL       38
   #define WY_DISPLAY_BL_PWM   1
   #define WY_HAS_TOUCH        0
-  /* Keyboard I2C */
+  /* STM32 co-processor I2C (key scanning + LED) */
   #define WY_KB_SDA           8
   #define WY_KB_SCL           9
   #define WY_KB_INT           7
