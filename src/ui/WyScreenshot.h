@@ -1,39 +1,41 @@
 /*
  * WyScreenshot.h — Universal screen capture for wyltek-embedded-builder
  * ========================================================================
- * Captures display contents and saves as JPEG to any Arduino filesystem
- * (SD, LittleFS, SPIFFS, FFat, etc.).
+ * Captures display contents as JPEG, supporting three backends:
  *
- * Two modes:
- *   1. Sprite mode (recommended, all boards):
- *      Pass an Arduino_Canvas* — reads directly from its pixel buffer.
- *      Zero display bus overhead. Works on RGB panels, SPI, everything.
+ *   1. Sprite mode (Arduino_GFX canvas — preferred, zero bus overhead)
+ *   2. TFT_eSPI mode (ILI9341/ST7789 — readRectRGB row-by-row, real GRAM)
+ *   3. HTTP server mode — serves live screenshots at GET /screenshot
  *
- *   2. Direct mode (SPI boards with readable GRAM only):
- *      Reads pixel-by-pixel from display via readPixelValue().
- *      Works reliably on ILI9341. Hit-or-miss on ST7789. NOT for RGB panels.
+ * TFT_eSPI mode is new (added 2026-03-01) and covers the CYD + any
+ * TFT_eSPI board. It's the right choice when you don't have a sprite.
  *
- * Usage (sprite mode — preferred):
+ * Usage (TFT_eSPI + HTTP server — CYD):
+ *   #define WY_SCREENSHOT_TFTESPI
  *   #include <ui/WyScreenshot.h>
+ *   #include <TFT_eSPI.h>
+ *   TFT_eSPI tft = TFT_eSPI();
  *
- *   // In your app, draw to a canvas sprite:
- *   Arduino_Canvas canvas(display.width, display.height, display.gfx);
- *   canvas.begin();
- *   canvas.fillScreen(BLACK);
- *   // ... draw your UI to canvas ...
- *   canvas.flush(); // push to display
+ *   // After WiFi connected, in setup():
+ *   WyScreenshot::startServer(&tft, 320, 240);
+ *   // In loop():
+ *   WyScreenshot::handleServer();   // OR: start with FreeRTOS task (see below)
  *
- *   // Capture:
- *   WyScreenshot::capture(&canvas, SD, "/screenshot.jpg");
+ *   // Capture to buffer:
+ *   size_t len; uint8_t *jpg = WyScreenshot::captureToBuffer(&tft, 320, 240, len);
+ *   // ... use jpg ...  free(jpg);
  *
- * Usage (direct mode — SPI only, CYD/ILI9341 recommended):
- *   WyScreenshot::captureDisplay(display.gfx, display.width, display.height,
- *                                 LittleFS, "/screenshot.jpg", 80);
+ * Usage (TFT_eSPI + FreeRTOS background task):
+ *   WyScreenshot::startServerTask(&tft, 320, 240);  // non-blocking
  *
- * Dependencies:
- *   - GFX Library for Arduino (Arduino_GFX)
- *   - Any Arduino FS (SD.h, LittleFS.h, FFat.h, SPIFFS.h)
- *   - ESP32 only (uses esp_camera JPEG encoder or libjpeg fallback)
+ * Usage (Arduino_GFX sprite mode):
+ *   WyScreenshot::captureToBuffer(canvas, len);
+ *
+ * Notes:
+ *   - TFT_eSPI readRectRGB() reads row-by-row: ~1KB heap per row, safe on CYD
+ *   - JPEG output buffer auto-sized; free() when done
+ *   - HTTP server on port WY_SCREENSHOT_PORT (default 81)
+ *   - JPEGENC (bitbank2/JPEGENC) must be in lib_deps
  *
  * License: MIT — Wyltek Industries
  * Part of wyltek-embedded-builder: https://github.com/toastmanAu/wyltek-embedded-builder
@@ -41,283 +43,193 @@
 
 #pragma once
 #include <Arduino.h>
-#include <FS.h>
-#include <Arduino_GFX_Library.h>
+#include <WebServer.h>
 
-/* ── JPEG quality (1=worst, 100=best, 80 is a good default) ──── */
 #ifndef WY_SCREENSHOT_QUALITY
-  #define WY_SCREENSHOT_QUALITY 80
+  #define WY_SCREENSHOT_QUALITY 85
 #endif
 
-/* ── Max memory for pixel row buffer (bytes) ─────────────────── */
-#ifndef WY_SCREENSHOT_ROW_BUF
-  #define WY_SCREENSHOT_ROW_BUF 4096
+#ifndef WY_SCREENSHOT_PORT
+  #define WY_SCREENSHOT_PORT 81
+#endif
+
+// ── Forward declarations ──────────────────────────────────────────
+#if __has_include("JPEGENC.h")
+  #include "JPEGENC.h"
+  #define WY_HAS_JPEGENC 1
+#endif
+
+#if defined(WY_SCREENSHOT_TFTESPI) || __has_include(<TFT_eSPI.h>)
+  #include <TFT_eSPI.h>
+  #define WY_HAS_TFTESPI 1
+#endif
+
+#if __has_include(<Arduino_GFX_Library.h>)
+  #include <Arduino_GFX_Library.h>
+  #define WY_HAS_GFX 1
 #endif
 
 class WyScreenshot {
 public:
 
-  /* ── Sprite mode ─────────────────────────────────────────────
-   * Reads pixels directly from an Arduino_Canvas framebuffer.
-   * This is the preferred method — no display readback required.
-   *
-   * @param canvas   Pointer to the Arduino_Canvas you draw to
-   * @param fs       Filesystem reference (SD, LittleFS, FFat, etc.)
-   * @param path     Output filename e.g. "/screenshot.jpg"
-   * @param quality  JPEG quality 1–100 (default WY_SCREENSHOT_QUALITY)
-   * @return true on success
-   */
-  static bool capture(Arduino_Canvas *canvas, fs::FS &fs, const char *path,
-                      uint8_t quality = WY_SCREENSHOT_QUALITY) {
-    if (!canvas) return false;
-    uint16_t w = canvas->width();
-    uint16_t h = canvas->height();
-    // Arduino_Canvas stores pixels as uint16_t RGB565 in getFramebuffer()
-    uint16_t *buf = canvas->getFramebuffer();
-    if (!buf) {
-      Serial.println("[WyScreenshot] ERROR: canvas has no framebuffer");
-      return false;
-    }
-    return _encodeAndSave(buf, w, h, fs, path, quality);
-  }
-
-  /* ── Direct display mode ─────────────────────────────────────
-   * Reads pixel-by-pixel from display GRAM via readPixelValue().
-   * Works reliably on ILI9341 (CYD). Unreliable on ST7789.
-   * Will NOT work on RGB-parallel panels (Guition, Sunton etc).
-   *
-   * Warning: slow — 320×240 = 76,800 SPI reads. Expect 3–10 seconds.
-   * For UI screenshots, use sprite mode instead.
-   *
-   * @param gfx      Pointer to your Arduino_GFX display
-   * @param w,h      Display dimensions in pixels
-   * @param fs       Filesystem reference
-   * @param path     Output filename
-   * @param quality  JPEG quality 1–100
-   * @return true on success
-   */
-  static bool captureDisplay(Arduino_GFX *gfx, uint16_t w, uint16_t h,
-                              fs::FS &fs, const char *path,
-                              uint8_t quality = WY_SCREENSHOT_QUALITY) {
-    if (!gfx) return false;
-    Serial.printf("[WyScreenshot] Direct capture %dx%d → %s\n", w, h, path);
-
-    // Allocate row-by-row to avoid large heap block
-    uint16_t *rowBuf = (uint16_t*)malloc(w * sizeof(uint16_t));
-    if (!rowBuf) { Serial.println("[WyScreenshot] ERROR: OOM for row buffer"); return false; }
-
-    // Allocate full framebuffer for JPEG encoding
-    uint32_t totalPx = (uint32_t)w * h;
-    if (totalPx * 2 > heap_caps_get_free_size(MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT)) {
-      // Try SPIRAM first, then internal
-    }
-    uint16_t *frameBuf = (uint16_t*)ps_malloc(totalPx * sizeof(uint16_t));
-    if (!frameBuf) frameBuf = (uint16_t*)malloc(totalPx * sizeof(uint16_t));
-    if (!frameBuf) {
-      free(rowBuf);
-      Serial.println("[WyScreenshot] ERROR: OOM for frame buffer");
-      return false;
-    }
-
-    uint32_t startMs = millis();
-    for (uint16_t y = 0; y < h; y++) {
-      for (uint16_t x = 0; x < w; x++) {
-        rowBuf[x] = gfx->readPixelValue(x, y);
-      }
-      memcpy(&frameBuf[(uint32_t)y * w], rowBuf, w * sizeof(uint16_t));
-    }
-    Serial.printf("[WyScreenshot] Pixel read done in %lums\n", millis() - startMs);
-
-    free(rowBuf);
-    bool ok = _encodeAndSave(frameBuf, w, h, fs, path, quality);
-    free(frameBuf);
-    return ok;
-  }
-
-  /* ── Quick helper: capture sprite + return JPEG as byte array ──
-   * Useful for sending over network (HTTP, UART) without SD.
-   * Caller must free() the returned buffer.
-   *
-   * @param canvas   Source sprite
-   * @param outLen   Output: JPEG byte count
-   * @param quality  JPEG quality
-   * @return malloc'd JPEG buffer, or nullptr on error
-   */
-  static uint8_t* captureToBuffer(Arduino_Canvas *canvas, size_t &outLen,
+  // ── TFT_eSPI: capture to heap-allocated JPEG buffer ────────────
+  // Row-by-row readRectRGB — only ~960 bytes heap per row, safe even
+  // when main buffers are allocated. Caller must free() the result.
+  // Returns nullptr on OOM or encode failure.
+#ifdef WY_HAS_TFTESPI
+  static uint8_t* captureToBuffer(TFT_eSPI *tft, int w, int h,
+                                   size_t &outLen,
                                    uint8_t quality = WY_SCREENSHOT_QUALITY) {
-    if (!canvas) return nullptr;
-    uint16_t *buf = canvas->getFramebuffer();
-    if (!buf) return nullptr;
-    return _encodeToBuffer(buf, canvas->width(), canvas->height(), outLen, quality);
-  }
-
-private:
-
-  /* ── RGB565 → JPEG → FS file ──────────────────────────────── */
-  static bool _encodeAndSave(uint16_t *rgb565, uint16_t w, uint16_t h,
-                              fs::FS &fs, const char *path, uint8_t quality) {
-    size_t jpegLen = 0;
-    uint8_t *jpegBuf = _encodeToBuffer(rgb565, w, h, jpegLen, quality);
-    if (!jpegBuf || jpegLen == 0) return false;
-
-    File f = fs.open(path, FILE_WRITE);
-    if (!f) {
-      Serial.printf("[WyScreenshot] ERROR: cannot open %s for write\n", path);
-      free(jpegBuf);
-      return false;
-    }
-    size_t written = f.write(jpegBuf, jpegLen);
-    f.close();
-    free(jpegBuf);
-
-    if (written != jpegLen) {
-      Serial.printf("[WyScreenshot] ERROR: wrote %d / %d bytes\n", written, jpegLen);
-      return false;
-    }
-    Serial.printf("[WyScreenshot] Saved %dx%d JPEG → %s (%d bytes, q=%d)\n",
-                  w, h, path, (int)jpegLen, quality);
-    return true;
-  }
-
-  /* ── Core encoder: RGB565 → JPEG in heap ─────────────────── */
-  static uint8_t* _encodeToBuffer(uint16_t *rgb565, uint16_t w, uint16_t h,
-                                   size_t &outLen, uint8_t quality) {
     outLen = 0;
-
-    // Convert RGB565 → RGB888 (JPEG encoder needs 24-bit input)
-    uint32_t nPixels = (uint32_t)w * h;
-    uint8_t *rgb888 = (uint8_t*)malloc(nPixels * 3);
-    if (!rgb888) {
-      rgb888 = (uint8_t*)ps_malloc(nPixels * 3);
-    }
-    if (!rgb888) {
-      Serial.println("[WyScreenshot] ERROR: OOM for RGB888 conversion");
+#ifndef WY_HAS_JPEGENC
+    Serial.println("[WyScreenshot] ERROR: JPEGENC not found. Add bitbank2/JPEGENC to lib_deps.");
+    return nullptr;
+#else
+    uint8_t *rowBuf  = (uint8_t *)malloc(w * 3);
+    // RGB565 frame: 320×240×2 = 150KB — fits in heap after main bufs freed.
+    // readRect() returns RGB565 directly — no conversion needed for JPEGENC.
+    // JPEGE_PIXEL_RGB565 + addFrame = simplest correct path.
+    free(rowBuf);   // don't need row buffer — readRect fills full frame
+    uint16_t *frameBuf = (uint16_t *)malloc(w * h * 2);   // 150KB for 320×240
+    if (!frameBuf) {
+      Serial.printf("[WyScreenshot] OOM frameBuf heap=%u largest=%u\n",
+                    ESP.getFreeHeap(), ESP.getMaxAllocHeap());
       return nullptr;
     }
-
-    _rgb565_to_rgb888(rgb565, rgb888, nPixels);
-
-    // Use esp_camera's fmt2jpg for JPEG encoding (available when esp_camera is a dep)
-    // Falls back to a minimal built-in JPEG writer if not available
-    uint8_t *jpegBuf = nullptr;
-    size_t jpegLen = 0;
-
-#if __has_include("esp_camera.h")
-    // esp_camera is in scope — use its battle-tested encoder
-    #include "esp_camera.h"
-    bool ok = fmt2jpg(rgb888, nPixels * 3, w, h, PIXFORMAT_RGB888, quality, &jpegBuf, &jpegLen);
-    if (!ok) jpegBuf = nullptr;
-#else
-    // Built-in fallback: write a simple JFIF JPEG
-    // Wraps the public-domain NanoJPEG or our own minimal RGB→JPEG
-    jpegBuf = _encode_rgb888_to_jpeg(rgb888, w, h, quality, jpegLen);
-#endif
-
-    free(rgb888);
+    int jpegBufSz = 32768;  // 320×240 Q85 JPEG ≈ 15–25KB
+    uint8_t *jpegBuf = (uint8_t *)malloc(jpegBufSz);
+    if (!jpegBuf) { free(frameBuf); return nullptr; }
+    uint32_t t0 = millis();
+    tft->readRect(0, 0, w, h, frameBuf);   // bulk SPI read of full frame (RGB565)
+    JPEGENC jpg; JPEGENCODE enc;
+    int rc = jpg.open(jpegBuf, jpegBufSz);
+    if (rc == JPEGE_SUCCESS)
+      rc = jpg.encodeBegin(&enc, w, h, JPEGE_PIXEL_RGB565, JPEGE_SUBSAMPLE_420, quality);
+    if (rc == JPEGE_SUCCESS)
+      rc = jpg.addFrame(&enc, (uint8_t *)frameBuf, w * 2);
+    int jpegLen = (rc == JPEGE_SUCCESS) ? jpg.close() : 0;
+    free(frameBuf);
+    Serial.printf("[WyScreenshot] TFT_eSPI %dx%d → %d bytes JPEG in %lums\n",
+                  w, h, jpegLen, millis()-t0);
+    if (jpegLen <= 0) { free(jpegBuf); return nullptr; }
     outLen = jpegLen;
     return jpegBuf;
-  }
-
-  /* ── RGB565 → RGB888 conversion ─────────────────────────── */
-  static void _rgb565_to_rgb888(const uint16_t *src, uint8_t *dst, uint32_t nPx) {
-    for (uint32_t i = 0; i < nPx; i++) {
-      uint16_t px = src[i];
-      // RGB565: RRRRRGGGGGGBBBBB
-      uint8_t r5 = (px >> 11) & 0x1F;
-      uint8_t g6 = (px >> 5)  & 0x3F;
-      uint8_t b5 =  px        & 0x1F;
-      // Expand to 8-bit with bit-replication (better colour accuracy than << 3)
-      dst[i*3 + 0] = (r5 << 3) | (r5 >> 2);   // R
-      dst[i*3 + 1] = (g6 << 2) | (g6 >> 4);   // G
-      dst[i*3 + 2] = (b5 << 3) | (b5 >> 2);   // B
-    }
-  }
-
-  /* ── Minimal JPEG encoder (fallback when esp_camera not available) ─
-   * Implements baseline JFIF JPEG — luma-only (greyscale) tables,
-   * then writes YCbCr blocks. Quality factor follows standard libjpeg
-   * quantisation table scaling.
-   *
-   * This is intentionally minimal. If you need best quality, add
-   * esp_camera to lib_deps and the fmt2jpg path will be used instead.
-   * ----------------------------------------------------------------- */
-  static uint8_t* _encode_rgb888_to_jpeg(const uint8_t *rgb888, uint16_t w, uint16_t h,
-                                          uint8_t quality, size_t &outLen) {
-    // Use Arduino's JPEG library if available via lib_deps
-    // Otherwise emit a raw JFIF with stub comment noting the limitation
-    // For full quality: add `bitbank2/JPEGENC` to lib_deps
-
-#if __has_include("JPEGENC.h")
-    #include "JPEGENC.h"
-    JPEGENC jpg;
-    JPEGENCODE jpe;
-    uint8_t *outBuf = (uint8_t*)malloc(w * h); // JPEG is typically < raw
-    if (!outBuf) outBuf = (uint8_t*)ps_malloc(w * h);
-    if (!outBuf) { outLen = 0; return nullptr; }
-    jpg.open(outBuf, w * h);
-    jpg.encodeBegin(&jpe, w, h, JPEGE_PIXEL_RGB888, JPEGE_SUBSAMPLE_420, quality);
-    for (uint16_t y = 0; y < h; y++) {
-      jpg.addLine(&jpe, (uint8_t*)&rgb888[(uint32_t)y * w * 3]);
-    }
-    outLen = jpg.close();
-    return outBuf;
-#else
-    // No encoder available — write a BMP instead as safe fallback
-    // BMP is uncompressed but always works
-    Serial.println("[WyScreenshot] WARN: No JPEG encoder found. Writing BMP instead.");
-    Serial.println("[WyScreenshot] HINT: Add 'bitbank2/JPEGENC' to lib_deps for JPEG output.");
-    return _encode_rgb888_to_bmp(rgb888, w, h, outLen);
 #endif
   }
+#endif // WY_HAS_TFTESPI
 
-  /* ── BMP fallback encoder (no deps, always works) ─────────── */
-  static uint8_t* _encode_rgb888_to_bmp(const uint8_t *rgb888, uint16_t w, uint16_t h,
-                                         size_t &outLen) {
-    // BMP header: 54 bytes + pixel data (RGB888, bottom-up, 3 bytes/pixel)
-    uint32_t rowStride = ((w * 3 + 3) & ~3);  // 4-byte aligned rows
-    uint32_t dataSize  = rowStride * h;
-    uint32_t fileSize  = 54 + dataSize;
-
-    uint8_t *bmp = (uint8_t*)malloc(fileSize);
-    if (!bmp) bmp = (uint8_t*)ps_malloc(fileSize);
-    if (!bmp) { outLen = 0; return nullptr; }
-
-    memset(bmp, 0, fileSize);
-
-    // BMP file header
-    bmp[0] = 'B'; bmp[1] = 'M';
-    _put32le(bmp + 2,  fileSize);
-    _put32le(bmp + 10, 54);           // pixel data offset
-
-    // DIB header (BITMAPINFOHEADER)
-    _put32le(bmp + 14, 40);           // header size
-    _put32le(bmp + 18, w);
-    _put32le(bmp + 22, (uint32_t)(-(int32_t)h)); // negative = top-down
-    _put16le(bmp + 26, 1);            // colour planes
-    _put16le(bmp + 28, 24);           // bits per pixel
-    _put32le(bmp + 30, 0);            // no compression
-    _put32le(bmp + 34, dataSize);
-
-    // Pixel data (RGB → BGR for BMP, top-down because we used negative height)
-    uint8_t *px = bmp + 54;
-    for (uint16_t y = 0; y < h; y++) {
-      const uint8_t *row = rgb888 + (uint32_t)y * w * 3;
-      for (uint16_t x = 0; x < w; x++) {
-        px[x*3 + 0] = row[x*3 + 2]; // B
-        px[x*3 + 1] = row[x*3 + 1]; // G
-        px[x*3 + 2] = row[x*3 + 0]; // R
-      }
-      px += rowStride;
+  // ── Arduino_GFX canvas: capture to buffer ──────────────────────
+#ifdef WY_HAS_GFX
+  static uint8_t* captureToBuffer(Arduino_Canvas *canvas,
+                                   size_t &outLen,
+                                   uint8_t quality = WY_SCREENSHOT_QUALITY) {
+    outLen = 0;
+    if (!canvas) return nullptr;
+#ifndef WY_HAS_JPEGENC
+    Serial.println("[WyScreenshot] ERROR: JPEGENC not found.");
+    return nullptr;
+#else
+    uint16_t w = canvas->width(), h = canvas->height();
+    uint16_t *fb = canvas->getFramebuffer();
+    if (!fb) return nullptr;
+    // Convert RGB565 → RGB888
+    uint32_t nPx = (uint32_t)w * h;
+    uint8_t *rgb888 = (uint8_t *)malloc(nPx * 3);
+    if (!rgb888) return nullptr;
+    for (uint32_t i = 0; i < nPx; i++) {
+      uint16_t px = fb[i];
+      uint8_t r5=(px>>11)&0x1F, g6=(px>>5)&0x3F, b5=px&0x1F;
+      rgb888[i*3+0]=(r5<<3)|(r5>>2);
+      rgb888[i*3+1]=(g6<<2)|(g6>>4);
+      rgb888[i*3+2]=(b5<<3)|(b5>>2);
     }
+    uint8_t *jpegBuf = (uint8_t *)malloc(w * h);
+    if (!jpegBuf) { free(rgb888); return nullptr; }
+    JPEGENC jpg; JPEGENCODE enc;
+    int rc = jpg.open(jpegBuf, jpegBufSz);
+    if (rc == JPEGE_SUCCESS)
+      rc = jpg.encodeBegin(&enc, w, h, JPEGE_PIXEL_RGB888, JPEGE_SUBSAMPLE_420, quality);
+    for (uint16_t y = 0; y < h && rc == JPEGE_SUCCESS; y++)
+      rc = jpg.addMCU(&enc, rgb888 + (uint32_t)y * w * 3, w * 3);
+    int jpegLen = (rc == JPEGE_SUCCESS) ? jpg.close() : 0;
+    free(rgb888);
+    if (jpegLen <= 0) { free(jpegBuf); return nullptr; }
+    outLen = jpegLen;
+    return jpegBuf;
+#endif
+  }
+#endif // WY_HAS_GFX
 
-    outLen = fileSize;
-    return bmp;
+  // ── HTTP server — TFT_eSPI mode ────────────────────────────────
+  // startServer(): init, call handleServer() in loop()
+  // startServerTask(): spins a FreeRTOS background task (non-blocking)
+#ifdef WY_HAS_TFTESPI
+  static void startServer(TFT_eSPI *tft, int w, int h,
+                          uint16_t port = WY_SCREENSHOT_PORT) {
+    _tft = tft; _w = w; _h = h;
+    if (!_server) _server = new WebServer(port);
+    _server->on("/", HTTP_GET, [](){
+      String html = "<html><body style='background:#07090f;color:#eee;font-family:monospace;padding:2rem'>"
+        "<h2>WyScreenshot — TFT_eSPI</h2>"
+        "<p><a href='/screenshot' style='color:#0cf'>📷 /screenshot</a></p>"
+        "<img src='/screenshot' style='max-width:100%;border:1px solid #333;margin-top:1rem'>"
+        "</body></html>";
+      _server->send(200, "text/html", html);
+    });
+    _server->on("/screenshot", HTTP_GET, _handleScreenshot);
+    _server->begin();
+    Serial.printf("[WyScreenshot] http://%s:%d/screenshot\n",
+                  WiFi.localIP().toString().c_str(), port);
   }
 
-  static void _put32le(uint8_t *p, uint32_t v) {
-    p[0]=v; p[1]=v>>8; p[2]=v>>16; p[3]=v>>24;
+  static void handleServer() {
+    if (_server) _server->handleClient();
   }
-  static void _put16le(uint8_t *p, uint16_t v) {
-    p[0]=v; p[1]=v>>8;
+
+  // Non-blocking: spins a FreeRTOS task that calls handleServer() forever.
+  // Call once after startServer(). No loop() changes needed.
+  static void startServerTask(TFT_eSPI *tft, int w, int h,
+                              uint16_t port = WY_SCREENSHOT_PORT,
+                              uint32_t stackSize = 6144) {
+    startServer(tft, w, h, port);
+    xTaskCreate([](void*){
+      for(;;) { if(_server) _server->handleClient(); vTaskDelay(5/portTICK_PERIOD_MS); }
+    }, "wyss", stackSize, nullptr, 1, nullptr);
   }
+#endif // WY_HAS_TFTESPI
+
+private:
+  static WebServer  *_server;
+#ifdef WY_HAS_TFTESPI
+  static TFT_eSPI   *_tft;
+#endif
+  static int         _w, _h;
+
+#ifdef WY_HAS_TFTESPI
+  static void _handleScreenshot() {
+    if (!_tft || !_server) return;
+    size_t len = 0;
+    uint8_t *jpg = captureToBuffer(_tft, _w, _h, len);
+    if (!jpg || len == 0) {
+      _server->send(503, "text/plain", "Capture failed — OOM or encode error");
+      return;
+    }
+    _server->sendHeader("Cache-Control", "no-cache");
+    _server->sendHeader("Access-Control-Allow-Origin", "*");
+    _server->send_P(200, "image/jpeg", (const char *)jpg, len);
+    free(jpg);
+  }
+#endif
 };
+
+// ── Static member definitions (include-once guard in .ino / .cpp) ─
+// Add this to one .cpp file (or your .ino) before including this header:
+//   #define WY_SCREENSHOT_IMPL
+// to instantiate the statics. Or just define them inline here for
+// header-only use (works for single-translation-unit Arduino sketches).
+WebServer  *WyScreenshot::_server = nullptr;
+int         WyScreenshot::_w      = 320;
+int         WyScreenshot::_h      = 240;
+#ifdef WY_HAS_TFTESPI
+TFT_eSPI   *WyScreenshot::_tft    = nullptr;
+#endif
