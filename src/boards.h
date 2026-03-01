@@ -422,6 +422,7 @@
   #define WY_BOARD_NAME       "ESP32-3248S035 (3.5\" 480x320)"
   #define WY_MCU_ESP32
   #define WY_MCU_CORES        2
+  #define WY_MCU_FREQ         240
   #define WY_HAS_PSRAM        0
   #define WY_HAS_DISPLAY      1
   #define WY_DISPLAY_ST7796
@@ -527,8 +528,11 @@
 #elif defined(WY_BOARD_SUNTON_8048S043)
   #define WY_BOARD_NAME       "Sunton ESP32-S3-8048S043 (4.3\" 800x480)"
   #define WY_MCU_ESP32S3
+  #define WY_MCU_CORES        2
+  #define WY_MCU_FREQ         240
   #define WY_HAS_PSRAM        1
   #define WY_HAS_DISPLAY      1
+  #define WY_DISPLAY_RGB_PANEL
   #define WY_DISPLAY_BUS_RGB16
   #define WY_DISPLAY_W        800
   #define WY_DISPLAY_H        480
@@ -579,8 +583,11 @@
 #elif defined(WY_BOARD_WT32_SC01_PLUS)
   #define WY_BOARD_NAME       "WT32-SC01 Plus (3.5\" 480x320)"
   #define WY_MCU_ESP32S3
+  #define WY_MCU_CORES        2
+  #define WY_MCU_FREQ         240
   #define WY_HAS_PSRAM        0
   #define WY_HAS_DISPLAY      1
+  #define WY_DISPLAY_ST7796
   #define WY_DISPLAY_ST7796
   #define WY_DISPLAY_BUS_PAR8
   #define WY_DISPLAY_W        480
@@ -623,6 +630,8 @@
 #elif defined(WY_BOARD_LILYGO_TDISPLAY_S3)
   #define WY_BOARD_NAME       "LilyGo T-Display S3 (1.9\" 320x170)"
   #define WY_MCU_ESP32S3
+  #define WY_MCU_CORES        2
+  #define WY_MCU_FREQ         240
   #define WY_HAS_PSRAM        1
   #define WY_HAS_DISPLAY      1
   #define WY_DISPLAY_ST7789
@@ -652,6 +661,8 @@
 #elif defined(WY_BOARD_XIAO_S3_ROUND)
   #define WY_BOARD_NAME       "XIAO ESP32-S3 Round Display (1.28\" 240x240)"
   #define WY_MCU_ESP32S3
+  #define WY_MCU_CORES        2
+  #define WY_MCU_FREQ         240
   #define WY_HAS_PSRAM        1
   #define WY_HAS_DISPLAY      1
   #define WY_DISPLAY_GC9A01
@@ -1766,14 +1777,19 @@
 #endif
 
 // ═══════════════════════════════════════════════════════════════════
+// Extended board definitions (additional boards appended below)
+// ═══════════════════════════════════════════════════════════════════
+
 // LOLIN S3 Pro v1.0.0
 // ESP32-S3-WROOM-1, 16MB Flash, 8MB PSRAM (Octal), 25 IO
 // LOLIN I2C port, LOLIN Display port, MicroSD, LiPo charging 500mA
 // 65.3×25.4mm · https://www.wemos.cc/en/latest/s3/s3_pro.html
-// ═══════════════════════════════════════════════════════════════════
-#elif defined(WY_BOARD_LOLIN_S3_PRO)
+#if defined(WY_BOARD_LOLIN_S3_PRO)
   #define WY_BOARD_NAME          "LOLIN S3 Pro"
   #define WY_MCU                 "ESP32-S3"
+  #define WY_MCU_ESP32S3
+  #define WY_MCU_CORES        2
+  #define WY_MCU_FREQ         240
   #define WY_ARCH                "xtensa-lx7"
   #define WY_FLASH_MB            16
   #define WY_PSRAM_MB            8
@@ -1806,6 +1822,9 @@
 #elif defined(WY_BOARD_ESP32C3_GC9A01_128)
   #define WY_BOARD_NAME          "ESP32-C3 GC9A01 1.28\""
   #define WY_MCU                 "ESP32-C3"
+  #define WY_MCU_ESP32C3
+  #define WY_MCU_CORES        1
+  #define WY_MCU_FREQ         160
   #define WY_ARCH                "riscv32"
   #define WY_FLASH_MB            4
   #define WY_PSRAM_MB            0
@@ -1814,6 +1833,7 @@
   #define WY_HAS_BLE             1
   // GC9A01 display (SPI)
   #define WY_DISPLAY_DRIVER      "GC9A01"
+  #define WY_DISPLAY_GC9A01
   #define WY_DISPLAY_W           240
   #define WY_DISPLAY_H           240
   #define WY_DISPLAY_ROUND       1
@@ -1836,6 +1856,9 @@
 #elif defined(WY_BOARD_FREENOVE_ESP32S3_CAM)
   #define WY_BOARD_NAME          "Freenove ESP32-S3 WROOM CAM"
   #define WY_MCU                 "ESP32-S3"
+  #define WY_MCU_ESP32S3
+  #define WY_MCU_CORES        2
+  #define WY_MCU_FREQ         240
   #define WY_ARCH                "xtensa-lx7"
   #define WY_FLASH_MB            8
   #define WY_PSRAM_MB            8
@@ -1874,6 +1897,9 @@
 #elif defined(WY_BOARD_TSCINBUNY_ESP32_PLUS_CAM)
   #define WY_BOARD_NAME          "Tscinbuny ESP32-PLUS CAM"
   #define WY_MCU                 "ESP32"
+  #define WY_MCU_ESP32
+  #define WY_MCU_CORES        2
+  #define WY_MCU_FREQ         240
   #define WY_ARCH                "xtensa-lx6"
   #define WY_FLASH_MB            4
   #define WY_PSRAM_MB            4
@@ -1910,6 +1936,9 @@
 #elif defined(WY_BOARD_ESP32S3_LVGL_HMI_43)
   #define WY_BOARD_NAME          "ESP32-S3 LVGL HMI 4.3\""
   #define WY_MCU                 "ESP32-S3"
+  #define WY_MCU_ESP32S3
+  #define WY_MCU_CORES        2
+  #define WY_MCU_FREQ         240
   #define WY_ARCH                "xtensa-lx7"
   #define WY_FLASH_MB            16
   #define WY_PSRAM_MB            8
@@ -1920,6 +1949,7 @@
   #define WY_HAS_TOUCH           1
   // RGB parallel LCD (ST7262 / ILI6485)
   #define WY_DISPLAY_DRIVER      "ST7262"
+  #define WY_DISPLAY_RGB_PANEL
   #define WY_DISPLAY_W           800
   #define WY_DISPLAY_H           480
   #define WY_DISPLAY_BUS         "RGB"
@@ -1948,6 +1978,8 @@
   #define WY_TOUCH_DRIVER        "GT911"
   #define WY_I2C_SDA             8
   #define WY_I2C_SCL             9
+  #define WY_TOUCH_GT911
+  #define WY_TOUCH_BUS_I2C
   #define WY_TOUCH_INT           4
   #define WY_TOUCH_RST           -1
   // Backlight
@@ -1961,7 +1993,11 @@
 #elif defined(WY_BOARD_ILI9488_SPI_GENERIC)
   #define WY_BOARD_NAME          "ILI9488 SPI Generic"
   #define WY_MCU                 ""   // peripheral only — pair with any MCU board
+  #define WY_MCU_ESP32
+  #define WY_MCU_CORES        2
+  #define WY_MCU_FREQ         240
   #define WY_DISPLAY_DRIVER      "ILI9488"
+  #define WY_DISPLAY_ILI9488
   #define WY_DISPLAY_W           480
   #define WY_DISPLAY_H           320
   #define WY_DISPLAY_BUS         "SPI"
@@ -1975,6 +2011,8 @@
   #define WY_TFT_DC              2
   #define WY_TFT_RST             4
   #define WY_TFT_BL              -1
+  #define WY_TOUCH_XPT2046
+  #define WY_TOUCH_BUS_I2C
   #define WY_TOUCH_CS            5
   #define WY_TOUCH_IRQ           33
 
@@ -1986,6 +2024,9 @@
 #elif defined(WY_BOARD_GUITION_3248W535)
   #define WY_BOARD_NAME          "Guition JC3248W535 3.5\""
   #define WY_MCU                 "ESP32-S3"
+  #define WY_MCU_ESP32S3
+  #define WY_MCU_CORES        2
+  #define WY_MCU_FREQ         240
   #define WY_ARCH                "xtensa-lx7"
   #define WY_FLASH_MB            16
   #define WY_PSRAM_MB            8
@@ -1995,6 +2036,7 @@
   #define WY_HAS_SD              1
   #define WY_HAS_TOUCH           1
   #define WY_DISPLAY_DRIVER      "ST7796"
+  #define WY_DISPLAY_ST7796
   #define WY_DISPLAY_W           320
   #define WY_DISPLAY_H           480
   #define WY_DISPLAY_BUS         "SPI"
@@ -2008,6 +2050,8 @@
   #define WY_TOUCH_DRIVER        "GT911"
   #define WY_I2C_SDA             4
   #define WY_I2C_SCL             5
+  #define WY_TOUCH_GT911
+  #define WY_TOUCH_BUS_I2C
   #define WY_TOUCH_INT           3
   #define WY_SD_CS               14
 
@@ -2018,6 +2062,9 @@
 #elif defined(WY_BOARD_GUITION_8048W550)
   #define WY_BOARD_NAME          "Guition JC8048W550 5\""
   #define WY_MCU                 "ESP32-S3"
+  #define WY_MCU_ESP32S3
+  #define WY_MCU_CORES        2
+  #define WY_MCU_FREQ         240
   #define WY_ARCH                "xtensa-lx7"
   #define WY_FLASH_MB            16
   #define WY_PSRAM_MB            8
@@ -2027,6 +2074,7 @@
   #define WY_HAS_SD              1
   #define WY_HAS_TOUCH           1
   #define WY_DISPLAY_DRIVER      "ST7262"
+  #define WY_DISPLAY_RGB_PANEL
   #define WY_DISPLAY_W           800
   #define WY_DISPLAY_H           480
   #define WY_DISPLAY_BUS         "RGB"
@@ -2054,6 +2102,8 @@
   #define WY_TOUCH_DRIVER        "GT911"
   #define WY_I2C_SDA             8
   #define WY_I2C_SCL             9
+  #define WY_TOUCH_GT911
+  #define WY_TOUCH_BUS_I2C
   #define WY_TOUCH_INT           4
   #define WY_SD_CS               -1
 
@@ -2064,6 +2114,9 @@
 #elif defined(WY_BOARD_GUITION_3232W328)
   #define WY_BOARD_NAME          "Guition JC3232W328 3.2\""
   #define WY_MCU                 "ESP32-S3"
+  #define WY_MCU_ESP32S3
+  #define WY_MCU_CORES        2
+  #define WY_MCU_FREQ         240
   #define WY_ARCH                "xtensa-lx7"
   #define WY_FLASH_MB            8
   #define WY_PSRAM_MB            8
@@ -2072,6 +2125,7 @@
   #define WY_HAS_BLE             1
   #define WY_HAS_TOUCH           1
   #define WY_DISPLAY_DRIVER      "ILI9341"
+  #define WY_DISPLAY_ST7796
   #define WY_DISPLAY_W           320
   #define WY_DISPLAY_H           240
   #define WY_TFT_MOSI            13
@@ -2082,6 +2136,11 @@
   #define WY_TFT_RST             8
   #define WY_TFT_BL              0
   #define WY_TOUCH_DRIVER        "XPT2046"
+  #define WY_TOUCH_GT911
+  #define WY_TOUCH_BUS_I2C
   #define WY_TOUCH_CS            7
   #define WY_TOUCH_IRQ           6
 
+#else
+  /* Extended block: board not matched in this group — no additional defines */
+#endif  /* extended board block */

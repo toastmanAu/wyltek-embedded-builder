@@ -1,0 +1,54 @@
+# wyltek-embedded-builder Board Test Report
+
+**Date:** 2026-03-01 15:51  |  **Commit:** `4f12486`  |  **Boards tested:** 43
+
+## Summary
+
+| Board | Tests | Result |
+|-------|-------|--------|
+| 🟢 CYD | 21 | PASS |
+| 🟢 CYD2USB | 21 | PASS |
+| 🟢 DOUBLE_EYE | 16 | PASS |
+| 🟢 GC9A01_GENERIC | 16 | PASS |
+| 🟢 ILI9341_ADAFRUIT | 18 | PASS |
+| 🟢 ILI9341_GENERIC | 18 | PASS |
+| 🟢 M5STACK_CORE | 16 | PASS |
+| 🟢 ESP32_3248S035 | 18 | PASS |
+| 🟢 GUITION4848S040 | 18 | PASS |
+| 🟢 SUNTON_8048S043 | 18 | PASS |
+| 🟢 WT32_SC01_PLUS | 18 | PASS |
+| 🟢 LILYGO_TDISPLAY_S3 | 16 | PASS |
+| 🟢 XIAO_S3_ROUND | 18 | PASS |
+| 🟢 LILYGO_A7670SA | 10 | PASS |
+| 🟢 LILYGO_TQTC6 | 19 | PASS |
+| 🟢 LILYGO_TSIM7080G_S3 | 10 | PASS |
+| 🟢 LILYGO_TDISPLAY_S3_LONG | 16 | PASS |
+| 🟢 LILYGO_TKEYBOARD_S3 | 16 | PASS |
+| 🟢 LILYGO_TDISPLAY_S3_AMOLED | 18 | PASS |
+| 🟢 LILYGO_TIMPULSE | 16 | PASS |
+| 🟢 LILYGO_TDECK | 18 | PASS |
+| 🟢 LILYGO_TPICO_S3 | 16 | PASS |
+| 🟢 TTGO_TBEAM | 10 | PASS |
+| 🟢 TTGO_TGO | 10 | PASS |
+| 🟢 TTGO_TDISPLAY | 16 | PASS |
+| 🟢 WAVESHARE_147_S3 | 16 | PASS |
+| 🟢 WAVESHARE_200_S3 | 16 | PASS |
+| 🟢 ST7789_GENERIC | 16 | PASS |
+| 🟢 ESP32CAM | 10 | PASS |
+| 🟢 ESP32S3EYE | 16 | PASS |
+| 🟢 TTGO_TBEAM_MESHTASTIC | 16 | PASS |
+| 🟢 TWATCH_2020_V3 | 18 | PASS |
+| 🟢 HELTEC_LORA32_V3 | 16 | PASS |
+| 🟢 LILYGO_TBEAM_SUPREME | 16 | PASS |
+| 🟢 LOLIN_S3_PRO | 10 | PASS |
+| 🟢 ESP32C3_GC9A01_128 | 10 | PASS |
+| 🟢 FREENOVE_ESP32S3_CAM | 10 | PASS |
+| 🟢 TSCINBUNY_ESP32_PLUS_CAM | 10 | PASS |
+| 🟢 ESP32S3_LVGL_HMI_43 | 10 | PASS |
+| 🟢 ILI9488_SPI_GENERIC | 10 | PASS |
+| 🟢 GUITION_3248W535 | 10 | PASS |
+| 🟢 GUITION_8048W550 | 10 | PASS |
+| 🟢 GUITION_3232W328 | 10 | PASS |
+
+**Total:** 637 tests passed across 43/43 boards
+
