@@ -1647,6 +1647,113 @@
   #define WY_SCREEN_W         WY_DISPLAY_W
   #define WY_SCREEN_H         WY_DISPLAY_H
 
+
+/* ══════════════════════════════════════════════════════════════════
+ * Heltec WiFi LoRa 32 V3 — ESP32-S3 + SX1262 + OLED
+ * ══════════════════════════════════════════════════════════════════
+ * MCU:     ESP32-S3FN8, dual-core 240MHz, 8MB flash, no PSRAM
+ * Radio:   SX1262, SPI, 868/915MHz, +22dBm, -148dBm sensitivity
+ * Display: SSD1306 OLED 0.96", I2C, 128×64
+ * USB:     USB-C (CDC)
+ * Buy:     https://heltec.org/project/wifi-lora-32-v3/
+ * ⚠️ Vext (GPIO36) must be HIGH to power OLED + peripherals
+ */
+#elif defined(WY_BOARD_HELTEC_LORA32_V3)
+  #define WY_BOARD_NAME       "Heltec WiFi LoRa 32 V3 (SX1262 + SSD1306)"
+  #define WY_MCU_ESP32S3
+  #define WY_MCU_CORES        2
+  #define WY_MCU_FREQ         240
+  #define WY_HAS_PSRAM        0
+  /* Display SSD1306 OLED */
+  #define WY_HAS_DISPLAY      1
+  #define WY_DISPLAY_SSD1306
+  #define WY_DISPLAY_BUS_I2C
+  #define WY_DISPLAY_W        128
+  #define WY_DISPLAY_H        64
+  #define WY_DISPLAY_ROT      0
+  #define WY_DISPLAY_SDA      17
+  #define WY_DISPLAY_SCL      18
+  #define WY_DISPLAY_RST      21
+  #define WY_DISPLAY_ADDR     0x3C
+  #define WY_HAS_TOUCH        0
+  #define WY_HAS_RGB_LED      0
+  /* LoRa SX1262 */
+  #define WY_HAS_LORA         1
+  #define WY_LORA_SX1262
+  #define WY_LORA_CS          8
+  #define WY_LORA_RST         12
+  #define WY_LORA_IRQ         14    /* DIO1 */
+  #define WY_LORA_BUSY        13
+  #define WY_LORA_SCK         9
+  #define WY_LORA_MOSI        10
+  #define WY_LORA_MISO        11
+  /* Power enable for OLED + peripherals */
+  #define WY_VEXT_PIN         36    /* HIGH = power on */
+  #define WY_BOOT_BTN         0
+  #define WY_SCREEN_W         WY_DISPLAY_W
+  #define WY_SCREEN_H         WY_DISPLAY_H
+
+/* ══════════════════════════════════════════════════════════════════
+ * LilyGo T-Beam Supreme S3 — ESP32-S3 + SX1262 + SH1106 + GPS + IMU
+ * ══════════════════════════════════════════════════════════════════
+ * MCU:     ESP32-S3FN8, dual-core 240MHz, 8MB flash, 8MB QSPI PSRAM
+ * Radio:   SX1262, SPI, 868/915MHz
+ * Display: SH1106 OLED 1.3", I2C (shared bus), 128×64
+ * GPS:     L76K or Ublox MAX-M10S (UART, GPIO8/9)
+ * IMU:     QMI8658 6-axis (SPI shared, CS=34)
+ * RTC:     PCF8563 (I2C shared)
+ * PMU:     AXP2101 (I2C shared) — must init before display/GPS
+ * SD:      SPI shared, CS=47
+ * Buy:     https://www.lilygo.cc/products/softrf-t-beamsupreme
+ * ⚠️ AXP2101 PMU must be init first — powers LoRa, GPS, OLED rails
+ * ⚠️ SPI shared: LoRa CS=39, IMU CS=34, SD CS=47
+ */
+#elif defined(WY_BOARD_LILYGO_TBEAM_SUPREME)
+  #define WY_BOARD_NAME       "LilyGo T-Beam Supreme S3 (SX1262 + SH1106 + GPS)"
+  #define WY_MCU_ESP32S3
+  #define WY_MCU_CORES        2
+  #define WY_MCU_FREQ         240
+  #define WY_HAS_PSRAM        1
+  /* Display SH1106 OLED */
+  #define WY_HAS_DISPLAY      1
+  #define WY_DISPLAY_SH1106
+  #define WY_DISPLAY_BUS_I2C
+  #define WY_DISPLAY_W        128
+  #define WY_DISPLAY_H        64
+  #define WY_DISPLAY_ROT      0
+  #define WY_DISPLAY_SDA      17
+  #define WY_DISPLAY_SCL      18
+  #define WY_DISPLAY_ADDR     0x3C
+  #define WY_HAS_TOUCH        0
+  #define WY_HAS_RGB_LED      0
+  /* LoRa SX1262 — shared SPI bus */
+  #define WY_HAS_LORA         1
+  #define WY_LORA_SX1262
+  #define WY_LORA_CS          39
+  #define WY_LORA_RST         -1    /* reset via PMU */
+  #define WY_LORA_IRQ         1     /* DIO1 */
+  #define WY_LORA_BUSY        4
+  #define WY_LORA_SCK         36
+  #define WY_LORA_MOSI        35
+  #define WY_LORA_MISO        37
+  /* GPS UART */
+  #define WY_GPS_TX           8
+  #define WY_GPS_RX           9
+  #define WY_GPS_PPS          6
+  #define WY_GPS_WAKEUP       7
+  /* IMU QMI8658 */
+  #define WY_IMU_CS           34
+  #define WY_IMU_IRQ          33
+  /* SD card */
+  #define WY_SD_CS            47
+  /* PMU AXP2101 + RTC PCF8563 — shared I2C */
+  #define WY_PMU_ADDR         0x34
+  #define WY_RTC_ADDR         0x51
+  #define WY_PMU_IRQ          40
+  #define WY_BOOT_BTN         0
+  #define WY_SCREEN_W         WY_DISPLAY_W
+  #define WY_SCREEN_H         WY_DISPLAY_H
+
 #else
   #warning "wyltek-embedded-builder: no board defined. Add -DWY_BOARD_xxx to build_flags."
   #define WY_HAS_DISPLAY  0
