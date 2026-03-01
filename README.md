@@ -51,12 +51,29 @@ The rule: **every reusable piece lives here**. Project repos only contain projec
 
 ## Supported Boards
 
-| Board | Display | Touch | Board JSON |
-|-------|---------|-------|-----------|
-| ESP32 CYD (2432S028R) | ILI9341 320×240 SPI | XPT2046 resistive | `boards/esp32-2432s028r.json` |
-| Guition ESP32-S3-4848S040 | ST7701S 480×480 RGB | GT911 I2C | `boards/guition4848s040.json` |
+**43 board targets** defined in `src/boards.h` — select via PlatformIO build flag:
 
-More boards coming.
+```ini
+build_flags = -DWY_BOARD_CYD   ; or any board below
+```
+
+**ESP32 classic**  
+CYD · CYD2USB · M5Stack Core · ILI9341 Generic · ILI9341 Adafruit · GC9A01 Generic · ST7789 Generic · ILI9488 SPI Generic · Double-Eye · ESP32CAM
+
+**ESP32-S3**  
+Guition 4848S040 · Guition 3248W535 · Guition 8048W550 · Guition 3232W328 · Sunton 8048S043 · ESP32-3248S035 · WT32-SC01 Plus · LilyGo T-Display S3 · LilyGo T-Display S3 AMOLED · LilyGo T-Display S3 Long · LilyGo T-Keyboard S3 · LilyGo T-Impulse · LilyGo T-Deck · LilyGo T-Pico S3 · Waveshare 1.47" S3 · Waveshare 2.00" S3 · XIAO S3 Round · ESP32-S3 Eye · Freenove ESP32-S3 Cam · ESP32S3 LVGL HMI 4.3" · LOLIN S3 Pro
+
+**ESP32-C3 / C6**  
+ESP32-C3 GC9A01 128 · LilyGo T-QT C6
+
+**LoRa / Cellular / GPS**  
+LilyGo A7670SA · LilyGo TSIM7080G-S3 · LilyGo T-Beam · LilyGo T-Beam Meshtastic · LilyGo T-Beam Supreme · TTGO T-Go · TTGO T-Display · Heltec LoRa32 V3
+
+**Wearable**  
+T-Watch 2020 V3
+
+**Camera**  
+ESP32CAM · ESP32-S3 Eye · Freenove S3 Cam · TSCinBuny ESP32-Plus-Cam
 
 ## Quick Start
 
@@ -89,13 +106,20 @@ build_flags = -DWY_BOARD_GUITION4848S040
 
 ## Status
 
-Early development — born from real firmware projects in the [CKB ecosystem](https://github.com/toastmanAu).
+Active development — born from real firmware projects in the [CKB ecosystem](https://github.com/toastmanAu).
 
-Confirmed working:
+Hardware confirmed working:
 - ✅ GT911 touch on Guition 4848S040
 - ✅ ST7701S RGB panel on Guition 4848S040  
 - ✅ XPT2046 + ILI9341 on CYD (ESP32-2432S028R)
 - ✅ NVS settings persistence
+
+Host test suite: **753/753 passing** — boards.h validation + sensor math + settings logic, no Arduino SDK required.
+
+```bash
+bash test/run_tests.sh
+# → 43/43 boards, 753 tests, 0 failed
+```
 
 ## License
 
