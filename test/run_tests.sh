@@ -72,6 +72,32 @@ for board in "${BOARDS[@]}"; do
   if [[ $VERBOSE -eq 1 ]]; then echo "$out"; fi
 done
 
+# ── LoRa module define tests ──────────────────────────────────────────────
+echo ""
+echo "  Running LoRa module define tests..."
+LORA_TOTAL_P=0; LORA_TOTAL_F=0
+for mod in WY_LORA_SX1276 WY_LORA_SX1278 WY_LORA_RFM95W WY_LORA_RFM96W WY_LORA_RA01 WY_LORA_RA01H WY_LORA_SX1262; do
+  BIN="/tmp/wytest_lora_${mod}"
+  LORA_ERR=$(g++ -std=c++17 -DHOST_TEST -D${mod} -Isrc test/test_lora_defines.cpp     -o "$BIN" 2>&1) || true
+  if [[ ! -x "$BIN" ]]; then
+    printf "  ${R}✗${NC} %-35s BUILD FAILED\n" "$mod"
+    LORA_TOTAL_F=$((LORA_TOTAL_F+1)); continue
+  fi
+  OUT=$(timeout 10 "$BIN" 2>&1) || true
+  P=$(echo "$OUT" | grep -cE '^\s*PASS:' 2>/dev/null || true)
+  F=$(echo "$OUT" | grep -cE '^\s*FAIL:' 2>/dev/null || true)
+  LORA_TOTAL_P=$((LORA_TOTAL_P+P)); LORA_TOTAL_F=$((LORA_TOTAL_F+F))
+  if [[ $VERBOSE -eq 1 ]]; then echo "$OUT"; fi
+done
+if [[ $LORA_TOTAL_F -eq 0 ]]; then
+  printf "  ${G}✓${NC} %-35s ${BOLD}%2d tests${NC}\n" "lora_defines (7 modules)" "$LORA_TOTAL_P"
+else
+  printf "  ${R}✗${NC} %-35s ${BOLD}%2d passed, %d failed${NC}\n" \
+    "lora_defines" "$LORA_TOTAL_P" "$LORA_TOTAL_F"
+fi
+TOTAL_P=$((TOTAL_P + LORA_TOTAL_P))
+TOTAL_F=$((TOTAL_F + LORA_TOTAL_F))
+
 # ── Settings logic tests ──────────────────────────────────────────────────
 echo ""
 echo "  Running settings logic tests..."
