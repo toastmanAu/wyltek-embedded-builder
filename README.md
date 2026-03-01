@@ -126,3 +126,21 @@ bash test/run_tests.sh
 Wyltek Embedded Builder is MIT licensed.
 
 Third-party components wrapped within this library retain their original licenses. Each `Wy*` wrapper file that incorporates third-party code includes the original license, author, and source URL in its header comment. See individual files and `LICENSES/` for full text of third-party licenses.
+
+## Hardware Test Status
+
+> **Legend:** 🟢 Physically tested on real hardware | 🔵 Virtually tested (code compiles, pinouts from datasheet/community) | ⚪ Untested
+
+| Board / Component | Define | Status | Notes |
+|---|---|---|---|
+| ESP32-2432S028R (CYD) | `WY_BOARD_CYD` | 🟢 2026-02 | NerdMiner flashed, ckb-light-esp compile target |
+| Guition ESP32-S3-4848S040 | `WY_BOARD_GUITION4848S040` | 🟢 2026-02 | Real mainnet CKB TX confirmed, Fiber kiosk node |
+| All other boards | — | 🔵 Virtual | Code verified, not physically on-hand yet |
+| GM861S Barcode Scanner | `WyGM861S` | 🟢 2026-02 | BlackBox POS — QR invoice scanning confirmed |
+| QR204 Thermal Printer | `WyHSQR204` | 🟢 2026-02 | BlackBox POS — thermal QR printing confirmed |
+| DFPlayer Mini | `WyDFPlayer` | 🟢 2026-02 | Protocol tested on bench, clone chip workaround confirmed |
+| All other sensors | — | 🔵 Virtual | Drivers from datasheet + community-verified pinouts |
+
+Hardware status is also visible on the [Wyltek Hardware Reference](https://wyltekindustries.com/hardware.html) page — each card shows its test badge with date and hover notes.
+
+To mark a component as physically tested: update the `tested` field in `hardware.html` and add a row here.
