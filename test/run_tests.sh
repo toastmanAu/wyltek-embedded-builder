@@ -72,12 +72,39 @@ for board in "${BOARDS[@]}"; do
   if [[ $VERBOSE -eq 1 ]]; then echo "$out"; fi
 done
 
+# ── Sensor math tests ─────────────────────────────────────────────────────
+echo ""
+echo "  Running sensor math tests..."
+SENSOR_BIN="/tmp/wytest_sensor_math"
+SENSOR_BUILD_ERR=$(g++ -std=c++17 -DHOST_TEST -Isrc test/test_sensor_math.cpp   -o "$SENSOR_BIN" -lm 2>&1) || true
+if [[ ! -x "$SENSOR_BIN" ]]; then
+  printf "  ${R}✗${NC} %-35s BUILD FAILED\n" "sensor_math"
+  SENSOR_PASS=0; SENSOR_FAIL=1; SENSOR_OUT="BUILD FAILED: $SENSOR_BUILD_ERR"
+else
+  SENSOR_OUT=$(timeout 30 "$SENSOR_BIN" 2>&1) || true
+  SENSOR_PASS=$(echo "$SENSOR_OUT" | grep -cE '^\s*PASS:' 2>/dev/null || true)
+  SENSOR_FAIL=$(echo "$SENSOR_OUT" | grep -cE '^\s*FAIL:' 2>/dev/null || true)
+  if [[ $SENSOR_FAIL -eq 0 ]]; then
+    printf "  ${G}✓${NC} %-35s ${BOLD}%2d tests${NC}\n" "sensor_math" "$SENSOR_PASS"
+  else
+    printf "  ${R}✗${NC} %-35s ${BOLD}%2d passed, %d failed${NC}\n" \
+      "sensor_math" "$SENSOR_PASS" "$SENSOR_FAIL"
+  fi
+  if [[ $VERBOSE -eq 1 ]]; then echo "$SENSOR_OUT"; fi
+fi
+TOTAL_P=$((TOTAL_P + SENSOR_PASS))
+TOTAL_F=$((TOTAL_F + SENSOR_FAIL))
+
 echo ""
 PASS_BOARDS=$((TOTAL_BOARDS - ${#FAILED_BOARDS[@]}))
 [[ ${#FAILED_BOARDS[@]} -eq 0 ]] && col=$G || col=$R
 printf "  ${BOLD}Boards: ${col}${PASS_BOARDS}/${TOTAL_BOARDS} passed${NC}${BOLD}  •  Tests: ${col}${TOTAL_P} passed${NC}\n\n"
 
 # Failure details
+if [[ $SENSOR_FAIL -gt 0 ]]; then
+  echo "  ${R}Failures in sensor_math:${NC}"
+  echo "$SENSOR_OUT" | grep -E '^\s*FAIL:|BUILD FAILED' | while read l; do echo "    $l"; done
+fi
 for board in "${FAILED_BOARDS[@]}"; do
   echo "  ${R}Failures in $board:${NC}"
   echo "${BO[$board]}" | grep -E '^\s*FAIL:|BUILD FAILED' | while read l; do
