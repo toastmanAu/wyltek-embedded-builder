@@ -72,6 +72,29 @@ for board in "${BOARDS[@]}"; do
   if [[ $VERBOSE -eq 1 ]]; then echo "$out"; fi
 done
 
+# ── Settings logic tests ──────────────────────────────────────────────────
+echo ""
+echo "  Running settings logic tests..."
+SETTINGS_BIN="/tmp/wytest_settings"
+SETTINGS_BUILD_ERR=$(g++ -std=c++17 -DHOST_TEST test/test_settings.cpp   -o "$SETTINGS_BIN" 2>&1) || true
+if [[ ! -x "$SETTINGS_BIN" ]]; then
+  printf "  ${R}✗${NC} %-35s BUILD FAILED\n" "settings_logic"
+  SETTINGS_PASS=0; SETTINGS_FAIL=1
+else
+  SETTINGS_OUT=$(timeout 30 "$SETTINGS_BIN" 2>&1) || true
+  SETTINGS_PASS=$(echo "$SETTINGS_OUT" | grep -cE '^\s*PASS:' 2>/dev/null || true)
+  SETTINGS_FAIL=$(echo "$SETTINGS_OUT" | grep -cE '^\s*FAIL:' 2>/dev/null || true)
+  if [[ $SETTINGS_FAIL -eq 0 ]]; then
+    printf "  ${G}✓${NC} %-35s ${BOLD}%2d tests${NC}\n" "settings_logic" "$SETTINGS_PASS"
+  else
+    printf "  ${R}✗${NC} %-35s ${BOLD}%2d passed, %d failed${NC}\n" \
+      "settings_logic" "$SETTINGS_PASS" "$SETTINGS_FAIL"
+  fi
+  if [[ $VERBOSE -eq 1 ]]; then echo "$SETTINGS_OUT"; fi
+fi
+TOTAL_P=$((TOTAL_P + SETTINGS_PASS))
+TOTAL_F=$((TOTAL_F + SETTINGS_FAIL))
+
 # ── Sensor math tests ─────────────────────────────────────────────────────
 echo ""
 echo "  Running sensor math tests..."
