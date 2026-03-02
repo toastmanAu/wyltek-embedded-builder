@@ -15,6 +15,9 @@
 
 /* Auth & signing */
 #include "auth/WyAuth.h"
+
+/* CKB transaction building */
+#include "ckb/WyMolecule.h"
 #include "display/WyDisplay.h"
 #include "display/WyKeyDisplay.h"
 #include "touch/WyTouch.h"
