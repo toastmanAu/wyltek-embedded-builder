@@ -12,6 +12,9 @@
  */
 
 #pragma once
+
+/* Auth & signing */
+#include "auth/WyAuth.h"
 #include "display/WyDisplay.h"
 #include "display/WyKeyDisplay.h"
 #include "touch/WyTouch.h"
