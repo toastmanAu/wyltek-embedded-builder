@@ -766,34 +766,64 @@
  * ⚠️ GC9107 = stripped-down GC9A01 variant. Same driver works.
  */
 #elif defined(WY_BOARD_LILYGO_TQTC6)
-  #define WY_BOARD_NAME       "LilyGo T-QT C6 (0.85\" 128x128)"
+  /* ══════════════════════════════════════════════════════════════════
+   * LilyGo T-QT C6 — ESP32-C6, 0.85" GC9107 128x128, CST816T touch
+   * ══════════════════════════════════════════════════════════════════
+   * MCU:     ESP32-C6-MINI-1U (RISC-V, 160MHz, 4MB flash, no PSRAM)
+   * Display: GC9107 SPI 128x128 (col_offset=2, row_offset=1)
+   * Touch:   CST816T I2C (same protocol as CST816S)
+   * Power:   ETA4662 (V1.0-1.1) or SGM41562 (V1.2) — I2C shared bus
+   * IMU:     LSM6DSL on battery backplate V1.1-1.2 — I2C shared bus
+   * Free UART: GPIO4 (RX from scanner), GPIO5 (TX to scanner)
+   * Ref: github.com/Xinyuan-LilyGO/T-QT-C6
+   */
+  #define WY_BOARD_NAME       "LilyGo T-QT C6 (0.85" 128x128 touch)"
   #define WY_MCU_ESP32C6
   #define WY_MCU_CORES        1
   #define WY_MCU_FREQ         160
   #define WY_HAS_PSRAM        0
+  /* Display */
   #define WY_HAS_DISPLAY      1
-  #define WY_DISPLAY_GC9A01   /* GC9107 — same driver */
+  #define WY_DISPLAY_GC9107
   #define WY_DISPLAY_BUS_SPI
   #define WY_DISPLAY_W        128
   #define WY_DISPLAY_H        128
   #define WY_DISPLAY_ROT      0
-  #define WY_DISPLAY_DC       2
-  #define WY_DISPLAY_CS       1
-  #define WY_DISPLAY_SCK      3
-  #define WY_DISPLAY_MOSI     7
-  #define WY_DISPLAY_RST      8
-  #define WY_DISPLAY_BL       -1    /* always on */
-  #define WY_DISPLAY_BL_PWM   0
-  #define WY_HAS_TOUCH        0
-  #define WY_HAS_RGB_LED      1
-  #define WY_LED_R            -1
-  #define WY_LED_G            -1
-  #define WY_LED_B            -1
-  #define WY_WS2812_PIN       11    /* WS2812 RGB LED */
+  #define WY_DISPLAY_DC       19
+  #define WY_DISPLAY_CS       14
+  #define WY_DISPLAY_SCK      18
+  #define WY_DISPLAY_MOSI     15
+  #define WY_DISPLAY_MISO     -1
+  #define WY_DISPLAY_RST      20
+  #define WY_DISPLAY_BL       2
+  #define WY_DISPLAY_BL_PWM   1
+  #define WY_DISPLAY_COL_OFFSET 2
+  #define WY_DISPLAY_ROW_OFFSET 1
+  /* Touch — CST816T */
+  #define WY_HAS_TOUCH        1
+  #define WY_TOUCH_CST816T
+  #define WY_TOUCH_BUS_I2C
+  #define WY_TOUCH_SDA        21
+  #define WY_TOUCH_SCL        22
+  #define WY_TOUCH_INT        7
+  #define WY_TOUCH_RST        23
+  #define WY_TOUCH_ADDR       0x15
+  #define WY_TOUCH_X_MAX      128
+  #define WY_TOUCH_Y_MAX      128
+  /* Battery */
+  #define WY_BAT_ADC          6
+  #define WY_BAT_CTRL         8
+  /* IMU enable (battery backplate V1.2) */
+  #define WY_IMU_EN           3
+  /* Free UART for GM861S scanner or other peripherals */
+  #define WY_UART_TX          4
+  #define WY_UART_RX          5
+  /* Misc */
+  #define WY_HAS_RGB_LED      0
+  #define WY_BREATHING_LED    2
   #define WY_BOOT_BTN         9
   #define WY_SCREEN_W         WY_DISPLAY_W
   #define WY_SCREEN_H         WY_DISPLAY_H
-
 /* ══════════════════════════════════════════════════════════════════
  * LilyGo T-SIM7080G-S3 — NB-IoT / Cat-M1 + GPS
  * ══════════════════════════════════════════════════════════════════
