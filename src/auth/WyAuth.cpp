@@ -12,6 +12,7 @@
  *                          on ESP32-S3 via idf-component-manager)
  */
 
+#ifdef WY_AUTH_ENABLED
 #include "WyAuth.h"
 
 /* ── Pull in crypto ───────────────────────────────────────────────────────── */
@@ -236,3 +237,5 @@ void WyAuth::wipe() {
     memset(_pubkey,  0, sizeof(_pubkey));
     _ready = false;
 }
+
+#endif // WY_AUTH_ENABLED

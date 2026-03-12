@@ -70,17 +70,23 @@ public:
 
     void begin() {
         #if defined(WY_BOARD_GUITION4848S040)
+        // GFX 1.5+: Arduino_ST7701_RGBPanel merged into Arduino_RGB_Display.
+        // Arduino_ESP32RGBPanel now requires timing params after pin list.
+        // ST7701S SPI init bus (shares pins with DE/VSYNC/HSYNC — init runs before RGB mode)
+        auto *spi_bus = new Arduino_ESP32SPI(
+            GFX_NOT_DEFINED, WY_RGB_SPI_CS, WY_RGB_SPI_SCK, WY_RGB_SPI_MOSI, GFX_NOT_DEFINED);
         auto *rgbbus = new Arduino_ESP32RGBPanel(
             WY_RGB_DE, WY_RGB_VSYNC, WY_RGB_HSYNC,
             WY_RGB_PCLK,
             WY_RGB_R0, WY_RGB_R1, WY_RGB_R2, WY_RGB_R3, WY_RGB_R4,
             WY_RGB_G0, WY_RGB_G1, WY_RGB_G2, WY_RGB_G3, WY_RGB_G4, WY_RGB_G5,
-            WY_RGB_B0, WY_RGB_B1, WY_RGB_B2, WY_RGB_B3, WY_RGB_B4);
-        gfx = new Arduino_ST7701_RGBPanel(
-            rgbbus, GFX_NOT_DEFINED, WY_DISPLAY_ROT, true,
-            WY_DISPLAY_W, WY_DISPLAY_H,
-            st7701_type1_init_operations, sizeof(st7701_type1_init_operations), true,
-            10, 8, 50, 10, 8, 20);
+            WY_RGB_B0, WY_RGB_B1, WY_RGB_B2, WY_RGB_B3, WY_RGB_B4,
+            0, 10, 8, 50,   // hsync: polarity, front_porch, pulse_width, back_porch
+            0, 10, 8, 20);  // vsync: polarity, front_porch, pulse_width, back_porch
+        gfx = new Arduino_RGB_Display(
+            WY_DISPLAY_W, WY_DISPLAY_H, rgbbus, WY_DISPLAY_ROT, true,
+            spi_bus, GFX_NOT_DEFINED,
+            st7701_type1_init_operations, sizeof(st7701_type1_init_operations));
 
         #elif defined(WY_BOARD_SUNTON_8048S043)
         auto *rgbbus = new Arduino_ESP32RGBPanel(
@@ -88,7 +94,9 @@ public:
             WY_RGB_PCLK,
             WY_RGB_R0, WY_RGB_R1, WY_RGB_R2, WY_RGB_R3, WY_RGB_R4,
             WY_RGB_G0, WY_RGB_G1, WY_RGB_G2, WY_RGB_G3, WY_RGB_G4, WY_RGB_G5,
-            WY_RGB_B0, WY_RGB_B1, WY_RGB_B2, WY_RGB_B3, WY_RGB_B4);
+            WY_RGB_B0, WY_RGB_B1, WY_RGB_B2, WY_RGB_B3, WY_RGB_B4,
+            0, 8, 4, 8,     // hsync timing
+            0, 8, 4, 8);    // vsync timing
         gfx = new Arduino_RGB_Display(
             WY_DISPLAY_W, WY_DISPLAY_H, rgbbus, WY_DISPLAY_ROT, true);
         #endif

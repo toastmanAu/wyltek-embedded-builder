@@ -27,6 +27,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
+#include <ArduinoOTA.h>
 
 #ifndef WY_NET_CONNECT_TIMEOUT_MS
 #define WY_NET_CONNECT_TIMEOUT_MS  15000
@@ -81,7 +82,6 @@ public:
     /* ── OTA ────────────────────────────────────────────────────── */
     void enableOTA(const char* password = nullptr) {
         _otaEnabled = true;
-        #include <ArduinoOTA.h>
         ArduinoOTA.setHostname(_hostname);
         if (password) ArduinoOTA.setPassword(password);
         ArduinoOTA.onStart([]()  { Serial.println("[OTA] start"); });
@@ -108,13 +108,11 @@ public:
                 _wasConnected = true;
                 Serial.printf("[WyNet] reconnected  IP: %s\n", WiFi.localIP().toString().c_str());
                 if (_otaEnabled) {
-                    #include <ArduinoOTA.h>
                     ArduinoOTA.begin();
                 }
                 if (_onConnect) _onConnect();
             }
             if (_otaEnabled) {
-                #include <ArduinoOTA.h>
                 ArduinoOTA.handle();
             }
         }

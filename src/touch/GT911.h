@@ -128,7 +128,7 @@ private:
     uint8_t  _addr  = GT911_ADDR;
     uint16_t _max_x = 480, _max_y = 480;
 
-    static void IRAM_ATTR _isr() { _irq = true; }
+    static void IRAM_ATTR _isr();  // defined in GT911.cpp
 
     void _writeReg(uint16_t reg, uint8_t* buf, uint8_t len) {
         Wire.beginTransmission(_addr);
@@ -146,4 +146,3 @@ private:
     }
 };
 
-volatile bool GT911::_irq = false;
