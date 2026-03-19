@@ -2171,6 +2171,58 @@
   #define WY_TOUCH_CS            7
   #define WY_TOUCH_IRQ           6
 
+#elif defined(WY_BOARD_GUITION_JC4880P433)
+/* ══════════════════════════════════════════════════════════════════
+ * Guition JC4880P433 — 4.3" 480×800 ESP32-P4 HMI panel
+ * ══════════════════════════════════════════════════════════════════
+ * Module:  GUITION JC-ESP32P4-M3
+ * MCU:     ESP32-P4, dual-core RISC-V HP @ 400MHz + LP core @ 40MHz
+ *          DSP/AI extensions, single-precision FPU
+ * RAM:     768KB HP L2 SRAM + 32KB LP SRAM + 32MB external PSRAM
+ * Flash:   16MB NOR Flash
+ * Display: 4.3" IPS, MIPI-DSI 2-lane, 480×800
+ * Touch:   Capacitive, I2C
+ * WiFi:    ESP32-C6-MINI coprocessor (Wi-Fi 6 + BT 5/BLE) via SDIO
+ * ETH:     100M Ethernet (IP101 PHY)
+ * USB:     USB 2.0 OTG HS (Type-C) + USB 1.1 OTG FS (Type-C)
+ * Audio:   Onboard microphone + speaker header (8Ω 2W)
+ * SD:      TF card slot (SDIO 3.0)
+ * GPIO:    11 accessible unused programmable GPIOs (2×13P 2.54mm)
+ * Size:    117.01 × 69.41mm | ~120g
+ * Price:   ~$30–35 USD (AliExpress/Surenoo)
+ * ══════════════════════════════════════════════════════════════════
+ */
+  #define WY_BOARD_NAME          "Guition JC4880P433 (4.3\" 480x800 ESP32-P4)"
+  #define WY_MCU                 "ESP32-P4"
+  #define WY_MCU_ESP32P4
+  #define WY_MCU_CORES           2           /* dual HP RISC-V cores */
+  #define WY_MCU_FREQ            400         /* HP core max MHz */
+  #define WY_ARCH                "riscv"
+  #define WY_FLASH_MB            16
+  #define WY_PSRAM_MB            32
+  #define WY_CPU_MHZ             400
+  #define WY_HAS_WIFI            1           /* via ESP32-C6 coprocessor */
+  #define WY_HAS_BLE             1           /* BT 5 / BLE via C6 */
+  #define WY_HAS_WIFI6           1
+  #define WY_HAS_ETHERNET        1           /* IP101 100M PHY */
+  #define WY_HAS_USB_HS          1           /* USB 2.0 OTG HS */
+  #define WY_HAS_USB_FS          1           /* USB 1.1 OTG FS */
+  #define WY_HAS_PSRAM           1
+  #define WY_HAS_DISPLAY         1
+  #define WY_DISPLAY_BUS_MIPI_DSI
+  #define WY_DISPLAY_W           480
+  #define WY_DISPLAY_H           800
+  #define WY_DISPLAY_ROT         0
+  #define WY_HAS_TOUCH           1
+  #define WY_TOUCH_BUS_I2C
+  #define WY_HAS_AUDIO           1           /* mic + speaker header */
+  #define WY_HAS_SD              1           /* TF card SDIO 3.0 */
+  #define WY_HAS_CAMERA          1           /* MIPI-CSI + ISP */
+  /* C6 coprocessor SDIO link */
+  #define WY_C6_SDIO_GPIO_RST    54
+  #define WY_C6_SDIO_GPIO_CMD    19
+  #define WY_C6_SDIO_GPIO_CLK    18
+  #define WY_SCREEN_W            WY_DISPLAY_W
+  #define WY_SCREEN_H            WY_DISPLAY_H
+
 #else
-  /* Extended block: board not matched in this group — no additional defines */
-#endif  /* extended board block */
