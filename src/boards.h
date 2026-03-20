@@ -2226,3 +2226,6 @@
   #define WY_SCREEN_H            WY_DISPLAY_H
 
 #else
+
+  #error "No WY_BOARD_* defined. See boards.h for available targets."
+#endif  /* board select */
